@@ -11,8 +11,8 @@
 | Faza | Deliverable | Status |
 |------|-------------|--------|
 | 0. Setup kontraktu projektu | `CLAUDE.md` (live state, reguły współpracy) | 🟢 done |
-| 1. Vision & Discovery | `docs/01-vision.md` | 🟡 w toku (rewizja draftu) |
-| 1.5. Ryzyka i konkurencja | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | ⏳ przed nami |
+| 1. Vision & Discovery | `docs/01-vision.md` | 🟢 done |
+| 1.5. Ryzyka i konkurencja | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | 🟡 w toku |
 | 2. PRD + OST | `docs/02-prd.md` | ⏳ przed nami |
 | 3. User Flows + IA | `docs/03-flows.md` | ⏳ przed nami |
 | 4. Wireframes (Lo-Fi) | `docs/04-wireframes.md` + link do Figmy | ⏳ przed nami |

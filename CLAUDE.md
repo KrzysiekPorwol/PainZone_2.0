@@ -8,7 +8,7 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 
 > Sekcja żywa — Claude utrzymuje ją aktualną. Edytowana przy każdej zmianie stanu (faza → faza, milestone → milestone). Krzysiek nie musi pamiętać o aktualizacji.
 
-- **Etap:** Faza 1 — vision (rewizja `docs/01-vision.md`)
+- **Etap:** Faza 1.5 — ryzyka i konkurencja (`docs/risks-and-assumptions.md`, `docs/competitive-analysis.md`)
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
   - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
   **Odpowiedzialność Claude:** Aktualizuj tę sekcję gdy stan się zmienia. Aktualizuj `docs/00-process.md` status table równolegle. Nie pytaj usera o pozwolenie na te aktualizacje — to mechanika, nie decyzja merytoryczna.
@@ -23,7 +23,6 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 - **ADR-y i ważne dokumenty designu** (`docs/adr/`, `docs/01-vision.md`, PRD, architecture docs, threat model, glossary): po polsku.
 - **Commit messages:** dwujęzyczne EN+PL (patrz skill `.claude/skills/commit/SKILL.md`).
 - **PR descriptions:** dwujęzyczne EN+PL.
-
 # Styl komunikacji
 
 ## Pytaj często
