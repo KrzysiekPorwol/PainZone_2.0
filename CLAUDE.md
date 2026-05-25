@@ -1,3 +1,15 @@
+# Konwencja językowa
+
+## Artefakty projektu
+- **Rozmowa Claude ↔ user:** po polsku.
+- **Kod (identyfikatory, komentarze inline, nazwy klas/funkcji/plików):** po angielsku.
+- **ADR-y i ważne dokumenty designu** (`docs/adr/`, `docs/01-vision.md`, PRD, architecture docs, threat model, glossary):
+  **dwujęzyczne — EN + PL obok siebie**, w jednym pliku. Format: sekcja EN, potem `---`, potem sekcja PL (analogicznie jak commit messages).
+  - **Why:** projekt jest portfolio dla rynku polskiego *i* potencjalnie międzynarodowego. EN daje czytelność dla rekrutera za granicą, PL ułatwia autorowi szybkie przeglądanie i jest naturalnym językiem myślenia.
+- **README projektu:** EN (główny), opcjonalnie `README.pl.md` z linkiem.
+- **Commit messages:** dwujęzyczne EN+PL (patrz skill `.claude/skills/commit/SKILL.md`).
+- **PR descriptions:** dwujęzyczne EN+PL.
+
 # Git workflow
 
 ## Kiedy commitować
