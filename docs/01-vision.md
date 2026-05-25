@@ -6,7 +6,7 @@
 
 > **PainZone 2.0** to apka mobilna która pozwala patrzeć i rejestrować wynik siłowy na treningu — żeby zajmowało to mało czasu, było wygodne i funkcjonalne.
 
-## 2. Problemwidz
+## 2. Problem
 
 Apki do trackowania treningów które dziś dominują (Hevy, Strong, Jefit i podobne) mają trzy istotne wady z perspektywy doświadczonego użytkownika siłowni:
 
