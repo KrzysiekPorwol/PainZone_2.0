@@ -1,3 +1,17 @@
+# Aktualny stan projektu
+
+> Sekcja żywa — Claude utrzymuje ją aktualną. Edytowana przy każdej zmianie stanu (faza → faza, milestone → milestone). Krzysiek nie musi pamiętać o aktualizacji.
+
+- **Etap:** Design (przed kodem). Faza 1 — Vision (🟡 do rewizji)
+- **Następny krok:** rewizja Vision, potem setup `docs/glossary.md`
+- **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
+- **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domeną
+- **Aktywne artefakty fazy:** `docs/01-vision.md`
+
+**Odpowiedzialność Claude:** Aktualizuj tę sekcję gdy stan się zmienia. Aktualizuj `docs/00-process.md` status table równolegle. Nie pytaj usera o pozwolenie na te aktualizacje — to mechanika, nie decyzja merytoryczna.
+
+---
+
 # Konwencja językowa
 
 ## Artefakty projektu
