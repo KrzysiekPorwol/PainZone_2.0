@@ -1,4 +1,4 @@
-# Design Process — PainZone 2.0
+za# Design Process — PainZone 2.0
 
 > Meta-document: **how** we design this app before writing code.
 > Phase outputs live in `docs/01-vision.md` … `docs/07-roadmap.md`.
@@ -8,7 +8,8 @@
 
 | Phase | Deliverable | Status |
 |-------|-------------|--------|
-| 1. Vision & Discovery | `docs/01-vision.md` | 🟡 in-progress (draft exists, needs revision) |
+| 0. Setup project contract | `CLAUDE.md` (live state, collab rules, non-goals) | 🟡 in-progress |
+| 1. Vision & Discovery | `docs/01-vision.md` | ⏳ pending (draft exists, revision blocked until Phase 0 done) |
 | 1.5. Risks & Competitive | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | ⏳ pending |
 | 2. PRD + OST | `docs/02-prd.md` | ⏳ pending |
 | 3. User Flows & IA | `docs/03-flows.md` | ⏳ pending |
@@ -35,6 +36,13 @@
 ---
 
 ## Phases
+
+### Phase 0 — Setup project contract
+
+**Goal:** Establish `CLAUDE.md` as the always-loaded contract — every future session starts with the same orientation about project context, collaboration style, decision authority, and locked non-goals.
+**Activities:** Add sections to `CLAUDE.md`: (A) Project context — one paragraph: what it is, stack, hard constraints; (B) Collaboration style — Socratic dialog, direct opinions with alternatives, justify everything; (C) When Claude acts vs asks — mechanics → act, design/scope/architecture → ask; (D) Locked non-goals — short list mirrored from Vision. Each section must earn its place by being useful in *every* session — heavy/phase-specific content stays in `docs/`.
+**Deliverable:** Updated `CLAUDE.md` (~70 lines total, well under the ~200-line danger zone).
+**Sources:** Anthropic Claude Code docs (CLAUDE.md convention); team agreements literature (Lyssa Adkins *Coaching Agile Teams*).
 
 ### Phase 1 — Vision & Discovery
 
@@ -175,7 +183,8 @@ Per phase: (1) I ask questions Socratically, (2) you decide / correct, (3) I dra
 
 | Faza | Deliverable | Status |
 |------|-------------|--------|
-| 1. Vision & Discovery | `docs/01-vision.md` | 🟡 w toku (draft istnieje, do rewizji) |
+| 0. Setup kontraktu projektu | `CLAUDE.md` (live state, reguły współpracy, non-goals) | 🟡 w toku |
+| 1. Vision & Discovery | `docs/01-vision.md` | ⏳ przed nami (draft istnieje, rewizja po zamknięciu Fazy 0) |
 | 1.5. Ryzyka i konkurencja | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | ⏳ przed nami |
 | 2. PRD + OST | `docs/02-prd.md` | ⏳ przed nami |
 | 3. User Flows + IA | `docs/03-flows.md` | ⏳ przed nami |
@@ -202,6 +211,13 @@ Per phase: (1) I ask questions Socratically, (2) you decide / correct, (3) I dra
 ---
 
 ## Fazy
+
+### Faza 0 — Setup kontraktu projektu
+
+**Cel:** Ustawienie `CLAUDE.md` jako always-loaded kontraktu — każda przyszła sesja startuje z tą samą orientacją: kontekst projektu, styl współpracy, decision authority, locked non-goals.
+**Działania:** Dodać sekcje do `CLAUDE.md`: (A) Kontekst projektu — akapit: co to, stack, twarde constraintsy; (B) Sposób pracy — sokratejski dialog, opinie wprost z alternatywą, uzasadniaj wszystko; (C) Kiedy Claude działa vs pyta — mechanika → działa, design/scope/architektura → pyta; (D) Twarde non-goals — krótka lista zmirrorowana z Vision. Każda sekcja musi zarabiać miejsce przez bycie użyteczną w *każdej* sesji — ciężka/specyficzna dla fazy zawartość zostaje w `docs/`.
+**Deliverable:** Zaktualizowany `CLAUDE.md` (~70 linii razem, mocno poniżej strefy ~200 linii).
+**Źródła:** dokumentacja Claude Code Anthropic (konwencja CLAUDE.md); literatura team agreements (Lyssa Adkins *Coaching Agile Teams*).
 
 ### Faza 1 — Vision & Discovery
 
