@@ -1,14 +1,17 @@
+# PainZone 2.0
+
+Android app do śledzenia postępów i prowadzenia dzienniczka treningów na siłowni. Stack: **Kotlin + Jetpack Compose**.
+
+---
+
 # Aktualny stan projektu
 
 > Sekcja żywa — Claude utrzymuje ją aktualną. Edytowana przy każdej zmianie stanu (faza → faza, milestone → milestone). Krzysiek nie musi pamiętać o aktualizacji.
 
 - **Etap:** Faza 0 — budujemy `CLAUDE.md` (kontrakt współpracy)
-- **Następny krok:** w nowej sesji dopracowujemy `CLAUDE.md` — sekcje: (A) Kontekst projektu, (B) Sposób pracy, (C) Kiedy Claude działa vs pyta, (D) Twarde non-goals. Sekcję po sekcji, sokratejsko.
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
-- **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domeną
-- **Aktywny artefakt fazy:** `CLAUDE.md` (rewizja Vision odblokowana po zamknięciu Fazy 0)
-
-**Odpowiedzialność Claude:** Aktualizuj tę sekcję gdy stan się zmienia. Aktualizuj `docs/00-process.md` status table równolegle. Nie pytaj usera o pozwolenie na te aktualizacje — to mechanika, nie decyzja merytoryczna.
+  - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
+  **Odpowiedzialność Claude:** Aktualizuj tę sekcję gdy stan się zmienia. Aktualizuj `docs/00-process.md` status table równolegle. Nie pytaj usera o pozwolenie na te aktualizacje — to mechanika, nie decyzja merytoryczna.
 
 ---
 
@@ -17,12 +20,30 @@
 ## Artefakty projektu
 - **Rozmowa Claude ↔ user:** po polsku.
 - **Kod (identyfikatory, komentarze inline, nazwy klas/funkcji/plików):** po angielsku.
-- **ADR-y i ważne dokumenty designu** (`docs/adr/`, `docs/01-vision.md`, PRD, architecture docs, threat model, glossary):
-  **dwujęzyczne — EN + PL obok siebie**, w jednym pliku. Format: sekcja EN, potem `---`, potem sekcja PL (analogicznie jak commit messages).
+- **ADR-y i ważne dokumenty designu** (`docs/adr/`, `docs/01-vision.md`, PRD, architecture docs, threat model, glossary): po polsku.
   - **Why:** projekt jest portfolio dla rynku polskiego *i* potencjalnie międzynarodowego. EN daje czytelność dla rekrutera za granicą, PL ułatwia autorowi szybkie przeglądanie i jest naturalnym językiem myślenia.
-- **README projektu:** EN (główny), opcjonalnie `README.pl.md` z linkiem.
 - **Commit messages:** dwujęzyczne EN+PL (patrz skill `.claude/skills/commit/SKILL.md`).
 - **PR descriptions:** dwujęzyczne EN+PL.
+
+# Styl komunikacji
+
+## Pytaj często
+- Przy każdej niejednoznaczności (scope, intencja, wybór biblioteki, nazwa, kierunek) **zatrzymaj się i zapytaj**. Lepiej dwa razy potwierdzić niż źle zgadnąć i odkręcać.
+- Dotyczy zarówno decyzji merytorycznych jak i drobnych wyborów które mają konsekwencje (nazwa pakietu, struktura folderów, etc.).
+- **Why:** projekt jest uczący i portfoliowy — chcę być świadomy każdej decyzji, nie odkrywać jej po fakcie w diffie.
+
+## Niezgoda — mów wprost
+- Gdy widzisz że mój pomysł jest słaby — **powiedz to wprost i uzasadnij** ("to zły kierunek bo X, lepiej Y bo Z"). Nie owijaj w bawełnę, nie sygnalizuj subtelnie.
+- Po argumentach decyzja należy do mnie. Ale chcę usłyszeć Twoją wersję, nie grzeczne "OK, zrobię".
+- **Why:** uczę się architektury — soft no jest bezużyteczne, mocna kontra z argumentem uczy.
+
+## Proaktywne alternatywy
+- Gdy widzisz lepszą opcję niż to o co proszę — **powiedz, nawet jeśli moja prośba była jasna.** Format: "Można też tak: X — pro Y, kontra Z. Co wybierasz?"
+- **Why:** nie znam wszystkich wzorców Kotlin/Compose — nie chcę żebyś milcząco realizował moją gorszą wersję, gdy widzisz lepszą.
+
+## Długość odpowiedzi
+- **Zwięźle + krótkie uzasadnienie.** Powiedz co zrobiłeś i dlaczego w 2–4 zdaniach. Bez podsumowań na końcu, bez nagłówków sekcji gdy nie trzeba.
+- Przy decyzjach merytorycznych — możesz rozwinąć. Przy mechanicznych krokach — jedno zdanie.
 
 # Git workflow
 
