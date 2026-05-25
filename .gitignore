@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Track Claude Code project config (skills, agents, settings)
+# Overrides global ~/.config/git/ignore rule that excludes .claude/
+!.claude/
+.claude/settings.local.json

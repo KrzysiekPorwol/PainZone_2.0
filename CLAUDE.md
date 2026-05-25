@@ -1,29 +1,12 @@
 # Git workflow
 
-## Automatyczne commitowanie i pushowanie
-- Po skończeniu każdego zadania commituj zmiany **bez pytania**.
-- Po commicie automatycznie pushuj na `origin`.
-- Można pushować bezpośrednio na `main` — to jednoosobowy projekt.
+## Kiedy commitować
+- Po skończeniu każdego zadania **automatycznie zrób commita i wypushuj** na `origin/main` — bez pytania.
+- Jeden commit = jedna spójna zmiana (feature / fix / refactor). Jeśli zadanie obejmuje kilka niezwiązanych rzeczy → zrób kilka osobnych commitów po kolei.
+- Push bezpośrednio na `main` jest OK — to jednoosobowy projekt.
 
-## Format wiadomości commitów
-- Używaj **konwencjonalnych commitów**: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `style:`, `perf:`, `build:`, `ci:`.
-- **Każdy commit musi mieć obie wersje językowe — angielską i polską.**
-- Tytuł po angielsku (≤ 70 znaków), polskie tłumaczenie w body.
-- Format:
-  ```
-  feat: add pain intensity slider to main screen
-
-  PL: feat: dodaj suwak intensywności bólu na ekranie głównym
-
-  <opcjonalny dłuższy opis po angielsku>
-
-  <opcjonalny dłuższy opis po polsku>
-  ```
-
-## Grupowanie zmian
-- Grupuj w **logiczne commity** — jeden commit = jedna spójna zmiana (feature / fix / refactor).
-- Nie wrzucaj niezwiązanych zmian do jednego commita.
-- Jeśli zadanie obejmuje kilka rzeczy — zrób kilka commitów po kolei.
+## Jak commitować
+**Zawsze gdy tworzysz commit w tym projekcie** — proaktywnie po tasku, na żądanie użytkownika, czy przez `/commit` — użyj skilla `.claude/skills/commit/SKILL.md`. Tam są wszystkie szczegóły: format wiadomości, typy, reguły dwujęzyczności (EN + PL), przykłady i workflow.
 
 ## Wymaga jawnej zgody (NIGDY automatycznie)
 Przed wykonaniem zawsze pytaj:
@@ -31,4 +14,5 @@ Przed wykonaniem zawsze pytaj:
 - `git reset --hard`
 - `git branch -D` / usuwanie brancha
 - `git rebase -i` na publicznych commitach
+- `git commit --amend` na już wypushowanych commitach
 - Jakiekolwiek nieodwracalne operacje na historii
