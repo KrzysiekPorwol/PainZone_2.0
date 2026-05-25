@@ -12,8 +12,7 @@
 |------|-------------|--------|
 | 0. Setup kontraktu projektu | `CLAUDE.md` (live state, reguły współpracy) | 🟢 done |
 | 1. Vision & Discovery | `docs/01-vision.md` | 🟢 done |
-| 1.5. Ryzyka i konkurencja | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | 🟡 w toku |
-| 2. PRD + OST | `docs/02-prd.md` | ⏳ przed nami |
+| 2. PRD + OST | `docs/02-prd.md` | 🟡 w toku |
 | 3. User Flows + IA | `docs/03-flows.md` | ⏳ przed nami |
 | 4. Wireframes (Lo-Fi) | `docs/04-wireframes.md` + link do Figmy | ⏳ przed nami |
 | 5. Domain Model | `docs/05-domain.md` | ⏳ przed nami |
@@ -52,15 +51,6 @@
 **Działania:** Wywiad w stylu Lean Canvas / Vision Statement, persona, problem, USP, metryki sukcesu, non-goals. Start `glossary.md` od pierwszych ~10 terminów domenowych.
 **Deliverable:** `docs/01-vision.md`
 **Źródła:** Eric Ries *The Lean Startup*; Ash Maurya *Running Lean* (Lean Canvas); Jonathan Rasmusson *The Agile Samurai* (Inception Deck).
-
-### Faza 1.5 — Ryzyka i konkurencja
-
-**Cel:** Wyciągnąć na wierzch co może zabić projekt + zmapować konkurencję — zanim zamkniemy scope.
-**Działania:**
-- **Assumptions & Risks register** — lista każdego założenia (o userze, o sobie, o technologii) które *może okazać się fałszywe*. Dla każdego: prawdopodobieństwo, impact, mitigation, eksperyment walidujący.
-- **Competitive teardown** — Hevy, Strong, Jefit: 1 screenshot per apka, tabela "co robią dobrze / źle / gdzie luka". Domyka USP.
-**Deliverables:** `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md`
-**Źródła:** arc42 §11 Risks; Marty Cagan *Inspired* (framing risks); Teresa Torres *Continuous Discovery Habits* (assumption tests).
 
 ### Faza 2 — PRD + Opportunity Solution Tree
 
@@ -108,13 +98,6 @@
 - **Threat model** (1 strona) — LINDDUN-lite dla danych treningowych/zdrowotnych: jakie dane, gdzie przechowywane, kto mógłby je zobaczyć, co jest mitigowane, co jest akceptowanym ryzykiem. Nawet "nic nie opuszcza urządzenia" to valid postura — ale spisana.
 **Deliverables:** `docs/06-architecture.md` (overview + diagramy C4); `docs/adr/0001-architecture-style.md`, `0002-modularization.md`, `0003-di-framework.md`, … (4–8 ADR-ów razem); `docs/threat-model.md`
 **Źródła:** Simon Brown *Software Architecture for Developers* (C4); Michael Nygard "Documenting Architecture Decisions" (2011); szablon arc42; OWASP SAMM Threat Assessment; framework LINDDUN (KU Leuven).
-
-### Faza 6.5 — Plan Walking Skeleton
-
-**Cel:** Zaplanować end-to-end najcieńszy możliwy vertical slice (jeden ekran → ViewModel → Room → z powrotem) **zanim** wejdziemy w pełny sprint feature'ów. Waliduje, że architektura z Fazy 6 faktycznie się składa.
-**Działania:** Wybór najprostszego sensownego wycinka (najpewniej: "Dodaj ćwiczenie do biblioteki, zobacz je na liście"). Definicja co wchodzi, co stub, co odroczone. To *plan*, jeszcze nie kod.
-**Deliverable:** `docs/walking-skeleton.md`
-**Źródła:** Alistair Cockburn (1999) "Walking Skeleton"; Hunt & Thomas *The Pragmatic Programmer* (tracer bullets).
 
 ### Faza 7 — Roadmap, scenariusze jakości i Definition of Done
 
