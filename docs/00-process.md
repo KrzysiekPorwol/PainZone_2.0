@@ -1,177 +1,4 @@
-za# Design Process — PainZone 2.0
 
-> Meta-document: **how** we design this app before writing code.
-> Phase outputs live in `docs/01-vision.md` … `docs/07-roadmap.md`.
-> This file is a living reference — it evolves when we learn the process needs to evolve.
-
-## Status
-
-| Phase | Deliverable | Status |
-|-------|-------------|--------|
-| 0. Setup project contract | `CLAUDE.md` (live state, collab rules, non-goals) | 🟡 in-progress |
-| 1. Vision & Discovery | `docs/01-vision.md` | ⏳ pending (draft exists, revision blocked until Phase 0 done) |
-| 1.5. Risks & Competitive | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | ⏳ pending |
-| 2. PRD + OST | `docs/02-prd.md` | ⏳ pending |
-| 3. User Flows & IA | `docs/03-flows.md` | ⏳ pending |
-| 4. Wireframes (Lo-Fi) | `docs/04-wireframes.md` + Figma link | ⏳ pending |
-| 5. Domain Model | `docs/05-domain.md` | ⏳ pending |
-| 6. Architecture + ADRs + Threat Model | `docs/06-architecture.md`, `docs/adr/*`, `docs/threat-model.md` | ⏳ pending |
-| 6.5. Walking Skeleton | `docs/walking-skeleton.md` | ⏳ pending |
-| 7. Roadmap + Quality Scenarios | `docs/07-roadmap.md`, `docs/08-quality.md` | ⏳ pending |
-
-**Living artifacts** (grow across phases, not gated to one phase):
-- `docs/glossary.md` — ubiquitous language (starts Phase 1)
-- `docs/adr/` — Architecture Decision Records (starts whenever a non-trivial decision is made)
-
----
-
-## Philosophy
-
-1. **Design-first.** Every phase produces a Markdown artifact in `docs/`. No code until phases 1–7 pass the "Definition of Done" below.
-2. **Every decision is justified.** Trivial choices in commit messages, medium ones in inline doc notes, significant ones in ADRs (Nygard format: Context / Decision / Consequences).
-3. **Cheap iteration first.** Wireframes before Compose. Domain model before Room schema. Architecture diagram before module structure.
-4. **Architecture follows requirements.** MVVM / single-module / Hilt because *of specific reasons*, not because "everyone uses it".
-5. **Process itself is a portfolio artifact.** A recruiter opening `docs/` should grasp the discipline in 5 minutes.
-
----
-
-## Phases
-
-### Phase 0 — Setup project contract
-
-**Goal:** Establish `CLAUDE.md` as the always-loaded contract — every future session starts with the same orientation about project context, collaboration style, decision authority, and locked non-goals.
-**Activities:** Add sections to `CLAUDE.md`: (A) Project context — one paragraph: what it is, stack, hard constraints; (B) Collaboration style — Socratic dialog, direct opinions with alternatives, justify everything; (C) When Claude acts vs asks — mechanics → act, design/scope/architecture → ask; (D) Locked non-goals — short list mirrored from Vision. Each section must earn its place by being useful in *every* session — heavy/phase-specific content stays in `docs/`.
-**Deliverable:** Updated `CLAUDE.md` (~70 lines total, well under the ~200-line danger zone).
-**Sources:** Anthropic Claude Code docs (CLAUDE.md convention); team agreements literature (Lyssa Adkins *Coaching Agile Teams*).
-
-### Phase 1 — Vision & Discovery
-
-**Goal:** One-sentence answers to: what is it, for whom, why, success metric, non-goals.
-**Activities:** Lean Canvas / Vision Statement interview, persona, problem statement, USP, success metrics, non-goals. Kick off `glossary.md` with first 10 domain terms.
-**Deliverable:** `docs/01-vision.md`
-**Sources:** Eric Ries *The Lean Startup*; Ash Maurya *Running Lean* (Lean Canvas); Jonathan Rasmusson *The Agile Samurai* (Inception Deck).
-
-### Phase 1.5 — Risks & Competitive
-
-**Goal:** Surface what could kill the project, and map the competitive landscape — before locking scope.
-**Activities:**
-- **Assumptions & Risks register** — list every assumption (about user, self, tech) that *might be false*. For each: likelihood, impact, mitigation, validation experiment.
-- **Competitive teardown** — Hevy, Strong, Jefit: 1 screenshot per app, table of "what they do well / poorly / where the gap is". Locks USP.
-**Deliverables:** `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md`
-**Sources:** arc42 §11 Risks; Marty Cagan *Inspired* (framing risks); Teresa Torres *Continuous Discovery Habits* (assumption tests).
-
-### Phase 2 — PRD + Opportunity Solution Tree
-
-**Goal:** Prioritized feature scope and a visual map from outcome to solutions.
-**Activities:**
-- **Opportunity Solution Tree (OST)** — outcome → opportunities (user needs) → solutions → assumption tests. Mermaid diagram.
-- **MoSCoW prioritization** — MVP (Must) / v1.1 (Should) / v2 (Could) / Won't.
-- **User stories** for MVP: *As [persona], I want [action], so that [benefit]*, each with acceptance criteria.
-**Deliverable:** `docs/02-prd.md`
-**Sources:** Teresa Torres *Continuous Discovery Habits* (OST); Karl Wiegers *Software Requirements* (MoSCoW, acceptance criteria).
-
-### Phase 3 — User Flows & Information Architecture
-
-**Goal:** All screens + how users move between them.
-**Activities:** Screen inventory; user flows in Mermaid for top scenarios (first launch, start workout, edit plan, see progress); navigation map; IA decision (bottom bar / drawer / tabs).
-**Deliverable:** `docs/03-flows.md`
-**Sources:** Donald Norman *The Design of Everyday Things*; Steve Krug *Don't Make Me Think*.
-
-### Phase 4 — Wireframes (Lo-Fi)
-
-**Goal:** Low-fidelity sketch of every screen. Structure only, no colors or final typography.
-**Activities:** Figma free account; one lo-fi frame per screen from Phase 3; annotations for click behavior; iterate on cheap medium.
-**Deliverable:** `docs/04-wireframes.md` (Figma link + key screenshots)
-**Sources:** Bill Buxton *Sketching User Experiences*.
-
-### Phase 5 — Domain Model
-
-**Goal:** Entities, attributes, relationships, states. The heart of the app.
-**Activities:**
-- Promote `glossary.md` to "mature" — every domain term defined with examples.
-- **Entity-Relationship Diagram** in Mermaid: entities (Exercise, MuscleGroup, TrainingPlan, PlannedDay, PlannedExercise, WorkoutSession, LoggedSet…), typed attributes, relations.
-- **State machines** for stateful entities (e.g. WorkoutSession: `NotStarted → InProgress → Paused → Completed → Discarded`).
-- **Invariants & edge cases** — e.g. "cannot edit a completed session", "LoggedSet reps > 0".
-- Locked decisions: muscle group as enum vs table; units (kg/lb) global vs per-exercise; ID strategy (UUID vs auto-increment).
-**Deliverable:** `docs/05-domain.md`
-**Sources:** Eric Evans *Domain-Driven Design* (Ubiquitous Language); Vaughn Vernon *Implementing DDD*; Vlad Khononov *Learning Domain-Driven Design* (2021).
-
-### Phase 6 — Architecture, ADRs & Threat Model
-
-**Goal:** Architectural choices, each justified with an ADR.
-**Activities:**
-- **C4 diagrams** — Context (System + actors) and Container (Android app + Room DB + future cloud). Component diagram optional, only if useful.
-- **Tech stack with rationale** (each as an ADR): architecture style (MVVM / MVI / Clean-lite), modularization (single vs multi), DI (Hilt / Koin / manual), navigation (Navigation Compose type-safe routes), persistence (Room + KSP), async (Coroutines + Flow), preferences (DataStore), test stack (JUnit + MockK + Turbine + Compose UI test), charts (Vico / MPAndroidChart / custom).
-- **Cross-cutting concerns:** logging (Timber?), error handling (sealed result types?), theming (Material 3 dynamic colors).
-- **Threat model** (1 page) — LINDDUN-lite for privacy-sensitive health/training data: what data, where stored, who could see it, what's mitigated, what's accepted risk. Even "nothing leaves the device" is a valid posture — but written.
-**Deliverables:** `docs/06-architecture.md` (overview + C4 diagrams); `docs/adr/0001-architecture-style.md`, `0002-modularization.md`, `0003-di-framework.md`, … (4–8 ADRs total); `docs/threat-model.md`
-**Sources:** Simon Brown *Software Architecture for Developers* (C4); Michael Nygard "Documenting Architecture Decisions" (2011); arc42 template; OWASP SAMM Threat Assessment; LINDDUN framework (KU Leuven).
-
-### Phase 6.5 — Walking Skeleton plan
-
-**Goal:** Plan an end-to-end thinnest-possible vertical slice (one screen → ViewModel → Room → back) **before** committing to a full sprint of features. Validates that the architecture from Phase 6 actually composes.
-**Activities:** Pick the simplest meaningful slice (likely: "Add an exercise to the library, see it in the list"). Define what's in, what's stubbed, what's deferred. This is a *plan*, not yet code.
-**Deliverable:** `docs/walking-skeleton.md`
-**Sources:** Alistair Cockburn (1999) "Walking Skeleton"; Hunt & Thomas *The Pragmatic Programmer* (tracer bullets).
-
-### Phase 7 — Roadmap, Quality Attribute Scenarios & Definition of Done
-
-**Goal:** Iteration plan + measurable quality bar.
-**Activities:**
-- Milestone breakdown: M1 (scaffolding + exercise library), M2 (CRUD plans), M3 (workout session + LoggedSet), M4 (statistics), M5 (polish + Play release).
-- **Quality Attribute Scenarios** in arc42 §10 format: *Source / Stimulus / Artifact / Environment / Response / Response Measure* — for performance (e.g. "log a set in < 200ms p95"), reliability, usability, security, maintainability.
-- **Definition of Done** for features (tests pass, no Detekt warnings, screenshot in PR, ADR if architectural).
-**Deliverables:** `docs/07-roadmap.md`, `docs/08-quality.md`
-
----
-
-## Definition of Done — design phase
-
-Before scaffolding code (Phase 8), all four must be true:
-
-1. **Coverage:** every MVP feature in PRD is covered by a wireframe and at least one domain entity.
-2. **Completeness:** every screen has a flow, every entity has typed attributes, every significant decision has an ADR.
-3. **Feasibility:** MVP is realistically buildable in the planned milestones, given solo capacity.
-4. **Portfolio-readiness:** `docs/` tells the story end-to-end such that a senior reviewer needs ≤ 5 minutes to grasp *what* and *why*.
-
-If any = false → return to the relevant phase.
-
----
-
-## Tools
-
-| Tool | Use | Cost |
-|------|-----|------|
-| Markdown | All `docs/*.md` artifacts | 0 |
-| Mermaid | ER, flows, state machines, OST, C4-lite (renders in GitHub) | 0 |
-| Figma (free) | Lo-fi wireframes | 0 |
-| ADR (Nygard) | Architecture decisions, `adr-tools` numbering convention (`0001-*.md`) | 0 |
-| GitHub Actions | CI: lint + unit tests + instrumented tests on hosted emulator | 0 |
-| mkdocs-material | (optional) Publish `docs/` as a site on GitHub Pages | 0 |
-
-## Portfolio polish (2025 table stakes)
-
-These are not phase deliverables but are expected by senior Android reviewers:
-
-- C4 Context + Container diagrams in Phase 6
-- ADRs numbered `0001-*.md`, `0002-*.md`, … (`adr-tools` convention)
-- GitHub Actions CI + status badge in README
-- Module graph diagram (`./gradlew projectDependencyGraph`)
-- Screen recording / GIF in README + APK published to GitHub Releases
-- Conventional Commits + auto-generated `CHANGELOG.md`
-
-## How we work in practice
-
-Per phase: (1) I ask questions Socratically, (2) you decide / correct, (3) I draft the artifact, (4) we review together, (5) commit + push per `CLAUDE.md` (bilingual EN+PL), (6) next phase. Each phase usually = 2–4 dialog sessions. Iterative, not waterfall.
-
-## References
-
-- Project rules: `CLAUDE.md`
-- Phase 1 output: `docs/01-vision.md`
-- Living glossary: `docs/glossary.md`
-- ADRs: `docs/adr/`
-
----
 
 # Proces designu — PainZone 2.0
 
@@ -183,8 +10,8 @@ Per phase: (1) I ask questions Socratically, (2) you decide / correct, (3) I dra
 
 | Faza | Deliverable | Status |
 |------|-------------|--------|
-| 0. Setup kontraktu projektu | `CLAUDE.md` (live state, reguły współpracy, non-goals) | 🟡 w toku |
-| 1. Vision & Discovery | `docs/01-vision.md` | ⏳ przed nami (draft istnieje, rewizja po zamknięciu Fazy 0) |
+| 0. Setup kontraktu projektu | `CLAUDE.md` (live state, reguły współpracy) | 🟢 done |
+| 1. Vision & Discovery | `docs/01-vision.md` | 🟡 w toku (rewizja draftu) |
 | 1.5. Ryzyka i konkurencja | `docs/risks-and-assumptions.md`, `docs/competitive-analysis.md` | ⏳ przed nami |
 | 2. PRD + OST | `docs/02-prd.md` | ⏳ przed nami |
 | 3. User Flows + IA | `docs/03-flows.md` | ⏳ przed nami |
@@ -214,8 +41,8 @@ Per phase: (1) I ask questions Socratically, (2) you decide / correct, (3) I dra
 
 ### Faza 0 — Setup kontraktu projektu
 
-**Cel:** Ustawienie `CLAUDE.md` jako always-loaded kontraktu — każda przyszła sesja startuje z tą samą orientacją: kontekst projektu, styl współpracy, decision authority, locked non-goals.
-**Działania:** Dodać sekcje do `CLAUDE.md`: (A) Kontekst projektu — akapit: co to, stack, twarde constraintsy; (B) Sposób pracy — sokratejski dialog, opinie wprost z alternatywą, uzasadniaj wszystko; (C) Kiedy Claude działa vs pyta — mechanika → działa, design/scope/architektura → pyta; (D) Twarde non-goals — krótka lista zmirrorowana z Vision. Każda sekcja musi zarabiać miejsce przez bycie użyteczną w *każdej* sesji — ciężka/specyficzna dla fazy zawartość zostaje w `docs/`.
+**Cel:** Ustawienie `CLAUDE.md` jako always-loaded kontraktu — każda przyszła sesja startuje z tą samą orientacją: kontekst projektu, styl współpracy, decision authority.
+**Działania:** Dodać do `CLAUDE.md` sekcje użyteczne w *każdej* sesji. Każda sekcja musi zarabiać miejsce — ciężka/specyficzna dla fazy zawartość zostaje w `docs/`.
 **Deliverable:** Zaktualizowany `CLAUDE.md` (~70 linii razem, mocno poniżej strefy ~200 linii).
 **Źródła:** dokumentacja Claude Code Anthropic (konwencja CLAUDE.md); literatura team agreements (Lyssa Adkins *Coaching Agile Teams*).
 
@@ -311,37 +138,3 @@ Zanim wejdziemy w scaffolding kodu (Faza 8), wszystkie 4 muszą być true:
 
 Jeśli którekolwiek = false → wracamy do odpowiedniej fazy.
 
----
-
-## Narzędzia
-
-| Narzędzie | Do czego | Koszt |
-|-----------|----------|-------|
-| Markdown | Wszystkie artefakty `docs/*.md` | 0 |
-| Mermaid | ER, flowy, state machines, OST, C4-lite (renderują się w GitHub) | 0 |
-| Figma (free) | Wireframes lo-fi | 0 |
-| ADR (Nygard) | Decyzje architektoniczne, konwencja numerowania `adr-tools` (`0001-*.md`) | 0 |
-| GitHub Actions | CI: lint + unit tests + instrumented testy na hosted emulator | 0 |
-| mkdocs-material | (opcjonalnie) Publikacja `docs/` jako strona na GitHub Pages | 0 |
-
-## Portfolio polish (table stakes 2025)
-
-To nie są deliverables faz, ale są oczekiwane przez senior reviewerów Androida:
-
-- C4 Context + Container w Fazie 6
-- ADR-y numerowane `0001-*.md`, `0002-*.md`, … (konwencja `adr-tools`)
-- GitHub Actions CI + status badge w README
-- Module graph (`./gradlew projectDependencyGraph`)
-- Screen recording / GIF w README + APK opublikowany w GitHub Releases
-- Conventional Commits + auto-generowany `CHANGELOG.md`
-
-## Jak praktycznie pracujemy
-
-Per faza: (1) ja zadaję pytania sokratejsko, (2) Ty decydujesz / korygujesz, (3) ja draftuję artefakt, (4) review wspólnie, (5) commit + push wg `CLAUDE.md` (dwujęzyczne EN+PL), (6) następna faza. Każda faza to zwykle 2–4 sesje dialogu. Iteracyjnie, nie waterfall.
-
-## Referencje
-
-- Zasady projektu: `CLAUDE.md`
-- Output Fazy 1: `docs/01-vision.md`
-- Living glossary: `docs/glossary.md`
-- ADR-y: `docs/adr/`
