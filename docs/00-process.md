@@ -10,7 +10,7 @@
 | 1. Vision & Discovery | `docs/01-vision.md` | 🟢 done |
 | 2. PRD + OST | `docs/02-prd.md` | 🟢 done |
 | 3. User Flows + IA | `docs/03-flows.md` | 🟢 done |
-| 4. Wireframes Lo-Fi | `docs/04-wireframes.md` | 🟡 w toku |
+| 4. Wireframes Lo-Fi | `docs/04-wireframes.md` | 🟢 done |
 | 5. Domain Model | `docs/05-domain.md` | ⏳ |
 | 6. Architektura + ADR + Threat Model | `docs/06-architecture.md`, `docs/adr/*`, `docs/threat-model.md` | ⏳ |
 | 6.5. Walking Skeleton | `docs/walking-skeleton.md` | ⏳ |

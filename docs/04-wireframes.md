@@ -1,6 +1,6 @@
 # Wireframes — PainZone 2.0
 
-> TL;DR: Master index — checklist 11 ekranów + 5 modali, linki do modułów per sekcja.
+> TL;DR: Master index — checklist 11 ekranów + 6 modali, linki do modułów per sekcja.
 
 **Konwencja:** `→` = nawigacja · `·` = separator · `dirty` = niezapisane zmiany
 
@@ -19,15 +19,28 @@
 | M3 | Nowe ćwiczenie | ✅ | [crud](04-wireframes-crud.md) |
 | S7 | Zarządzaj biblioteką | ✅ | [library](04-wireframes-library.md) |
 | S8 | Edycja ćwiczenia | ✅ | [library](04-wireframes-library.md) |
-| S9 | Sesja treningowa | ⏳ | [session](04-wireframes-session.md) |
-| D2 | Zakończ sesję | ⏳ | [session](04-wireframes-session.md) |
-| S10 | Stats Lite | ⏳ | [misc](04-wireframes-misc.md) |
-| S11 | Ustawienia | ⏳ | [misc](04-wireframes-misc.md) |
-| D1 | Dialog usunięcia | ⏳ | [misc](04-wireframes-misc.md) |
+| S9 | Sesja treningowa | ✅ | [session](04-wireframes-session.md) |
+| D2 | Zakończ sesję | ✅ | [session](04-wireframes-session.md) |
+| S10 | Stats Lite | ✅ | [misc](04-wireframes-misc.md) |
+| S11 | Ustawienia | ✅ | [misc](04-wireframes-misc.md) |
+| D1 | Dialog usunięcia | ✅ | [misc](04-wireframes-misc.md) |
+| D3 | Reset danych | ✅ | [misc](04-wireframes-misc.md) |
 
-## Bottom bar — checkpoint stylowania
+## Bottom bar — spec stylowania
 
-🚧 Po ukończeniu wszystkich modułów: 2–3 warianty (labels, kształt, tło). Decyzja z Flow §1 O1.
+> Decyzja: **Wariant B+ (YouTube-style)** — ikony Material Symbols + label pod, active = Filled + `primary` color. Brak pill/dot/underline. Zamyka Flow §1 O1.
+
+| Element | Spec |
+|---|---|
+| Height | 64dp |
+| Ikony | Material Symbols 24dp · inactive=Outlined `onSurfaceVariant` (60%) · active=Filled `primary` (100%) |
+| Label | 12sp · inactive=Regular `onSurfaceVariant` · active=Medium `primary` |
+| Tab → ikona | Trenuj=`fitness_center` · Plany=`list_alt` · Postęp=`trending_up` |
+| Background | `surface` solid · brak elevation · divider-top 1dp `outlineVariant` |
+| Touch target | 64dp × 1/3 width per tab |
+| Accessibility | `contentDescription` = nazwa zakładki · "wybrane, X, 1 z 3" w TalkBack |
+
+**Rationale:** 16dp mniej chrome niż M3 default (80dp→64dp) = więcej miejsca dla treści sesji. Labele zostają dla first-time discoverability i a11y. Filled-vs-Outlined wystarcza jako active signal — pill byłby double signal. `list_alt` bo Plan = lista dni, nie kalendarz dat.
 
 ## Referencje
 
