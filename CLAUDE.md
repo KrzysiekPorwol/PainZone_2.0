@@ -19,14 +19,9 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 # Dokumentacja — dyscyplina tokenów
 
 - Każdy `docs/*.md` zaczyna się od `> TL;DR: [1 zdanie]` tuż pod nagłówkiem.
-- Cel: ~100 linii / plik. Powyżej 150 → rozbij na moduły lub tnij/l.
 - Nie duplikuj między docs — linkuj do źródła.
 - Każde zdanie zarabia: wartość dla Claude-context, portfolio lub nauki. 0/3 → wytnij.
-- **Format spec ekranów — NIGDY ASCII art.** Używaj compact spec (≤5 linii/ekran):
-  `Sx · Nazwa [PRD ref] / Fields: … / Actions: …→… / States: …`
-  Design thinking = rozmowa, nie plik. Decyzje → compact spec.
-- **Budżet sesji:** `02-prd` + `03-flows` + `04-wireframes` łącznie ≤ 300 linii.
-  Przekroczenie przed Fazą 6 → przytnij zanim zaczniesz pisać kod.
+- **Docs designu (`docs/0X-*.md`, ADR-y, threat model, roadmap, quality):** prowadzi skill `.claude/skills/design-phase/SKILL.md` — struktura Spec/Rationale, hard limit 100 linii/plik, reading rules (`limit=60` default), phase output contracts, anti-patterns (ASCII art, mermaid w Spec, długie why-paragraphs). Aktywuje się automatycznie przy edycji/dyskusji docs designu.
 
 ---
 
