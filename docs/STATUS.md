@@ -2,7 +2,7 @@
 
 # Aktualny stan projektu
 
-- **Etap:** Faza 5 — Domain Model (`docs/05-domain.md`) — Faza 4 zamknięta 2026-05-26
+- **Etap:** Faza 5 — Domain Model — w trakcie (1/3 modułów): exercise ✅, plan ⏳, session ⏳. Index: `docs/05-domain.md`.
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
 - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
 
