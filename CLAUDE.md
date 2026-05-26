@@ -19,7 +19,7 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 # Dokumentacja — dyscyplina tokenów
 
 - Każdy `docs/*.md` zaczyna się od `> TL;DR: [1 zdanie]` tuż pod nagłówkiem.
-- Cel: ~200 linii / plik. Powyżej 300 → rozbij na moduły lub tnij bez litości.
+- Cel: ~100 linii / plik. Powyżej 150 → rozbij na moduły lub tnij/l.
 - Nie duplikuj między docs — linkuj do źródła.
 - Każde zdanie zarabia: wartość dla Claude-context, portfolio lub nauki. 0/3 → wytnij.
 
