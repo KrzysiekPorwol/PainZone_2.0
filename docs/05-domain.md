@@ -9,7 +9,7 @@
 | Moduł | Encje | Status | Plik |
 |-------|-------|--------|------|
 | Exercise | `Exercise`, `MuscleGroup` (enum) | ✅ | [`05-domain-exercise.md`](05-domain-exercise.md) |
-| Plan | `TrainingPlan`, `PlannedDay`, `PlannedExercise` | ⏳ | `05-domain-plan.md` |
+| Plan | `TrainingPlan`, `PlannedDay`, `PlannedExercise` | ✅ | [`05-domain-plan.md`](05-domain-plan.md) |
 | Session | `WorkoutSession`, `SessionExerciseSnapshot`, `LoggedSet`, `Rpe` (enum) | ⏳ | `05-domain-session.md` |
 
 ### Cross-cutting decyzje (przyjęte na starcie F5)
