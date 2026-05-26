@@ -8,7 +8,7 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 
 > Sekcja żywa — Claude utrzymuje ją aktualną. Edytowana przy każdej zmianie stanu (faza → faza, milestone → milestone). Krzysiek nie musi pamiętać o aktualizacji.
 
-- **Etap:** Faza 2 — PRD + Opportunity Solution Tree (`docs/02-prd.md`)
+- **Etap:** Faza 3 — User Flows + Information Architecture (`docs/03-flows.md`)
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
   - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
   **Odpowiedzialność Claude:** Aktualizuj tę sekcję gdy stan się zmienia. Aktualizuj `docs/00-process.md` status table równolegle. Nie pytaj usera o pozwolenie na te aktualizacje — to mechanika, nie decyzja merytoryczna.

@@ -1,6 +1,6 @@
 # PRD — PainZone 2.0
 
-> Dokument Fazy 2 procesu designu. Sekcja MoSCoW zatwierdzona: 2026-05-25. OST i user stories — w trakcie. Aktualizuje się wraz z Fazą 3 (User Flows).
+> Dokument Fazy 2 procesu designu. Zatwierdzony: 2026-05-26 (MoSCoW + OST + User Stories). Aktualizuje się wraz z Fazą 3 (User Flows).
 >
 > Poprzedni dokument: `docs/01-vision.md` · Następny: `docs/03-flows.md`
 
@@ -200,7 +200,225 @@ LOW risk, walidują się pasywnie przez używanie. Krótka lista:
 
 ## 4. User Stories — MVP
 
-> _W trakcie. Format: "Jako [persona], chcę [akcja], żeby [benefit]" + acceptance criteria. Po jednej grupie stories per feature z MUST §2._
+Każda story = jedna feature z MUST §2, z linkiem do odpowiadającej opportunity z OST §3.3. AC w formacie Given/When/Then — wymusza konkretny, obserwowalny rezultat i mapuje 1:1 do testów UI/integracyjnych w Fazie 6.5+. Niektóre AC odwołują się do decyzji domenowych do zamknięcia w Fazie 5 (oznaczone explicit) — świadome ograniczenie: PRD nie wyprzedza domain modelu.
+
+### 4.1 Biblioteka ćwiczeń (CRUD)
+
+> Mapuje na: MUST §2 (Biblioteka ćwiczeń) · OST Opp 2.1
+
+**Jako** doświadczony amator siłowni,
+**chcę** zarządzać własną listą ćwiczeń (dodawać / edytować / usuwać),
+**żeby** biblioteka odzwierciedlała wyłącznie *moje* ~20 realnie używanych pozycji — bez szumu z gotowych katalogów Hevy/Strong.
+
+**AC1 — Dodanie pierwszego ćwiczenia z pustej biblioteki**
+*Given* otwieram pustą bibliotekę pierwszy raz po instalacji
+*When* klikam "dodaj ćwiczenie", wpisuję nazwę "Wyciskanie na ławce poziomej" i wybieram grupę "Klatka"
+*Then* ćwiczenie zapisuje się i pojawia na liście, gotowe do użycia w planie
+
+**AC2 — Walidacja: nazwa + grupa mięśniowa obowiązkowe**
+*Given* tworzę lub edytuję ćwiczenie
+*When* próbuję zapisać bez nazwy albo bez wybranej grupy mięśniowej
+*Then* akcja "zapisz" jest disabled dopóki oba pola są wypełnione (invariant `Exercise.muscleGroup != null` — patrz Faza 5)
+
+**AC3 — Edycja ćwiczenia propaguje się wszędzie**
+*Given* mam ćwiczenie "Wycoskanie" (literówka) użyte w 2 planach i 12 sesjach historycznych
+*When* zmieniam nazwę na "Wyciskanie"
+*Then* nowa nazwa pojawia się w planach i historii sesji — bez utraty żadnej zarejestrowanej serii
+
+**AC4 — Usunięcie ćwiczenia użytego w planie / historii**
+*Given* chcę usunąć ćwiczenie referencjonowane w aktywnym planie lub w historii sesji
+*When* potwierdzam usunięcie
+*Then* dostaję ostrzeżenie ile planów i sesji się do niego odwołuje; po potwierdzeniu znika z biblioteki, ale **historia LoggedSet pozostaje czytelna** w Stats Lite (patrz 4.6 AC5). Strategia (soft delete vs hard delete + snapshot nazwy) → Faza 5
+
+---
+
+### 4.2 Plany treningowe (CRUD)
+
+> Mapuje na: MUST §2 (Plany treningowe) · OST Opp 2.2
+
+**Jako** doświadczony amator siłowni,
+**chcę** złożyć własny plan z uporządkowanych dni i ćwiczeń (każde z liczbą serii i timerem odpoczynku),
+**żeby** sesja na siłowni miała gotowy kontekst — wiem ile serii zrobić i ile odpoczywać, bez improwizacji.
+
+**AC1 — Stworzenie planu z dniami**
+*Given* mam w bibliotece co najmniej 5 ćwiczeń
+*When* tworzę plan "Push/Pull/Nogi", dodaję 3 dni (Push, Pull, Nogi) i do każdego dnia dokładam 4–6 ćwiczeń z biblioteki
+*Then* plan zapisuje się; kolejność dni i kolejność ćwiczeń wewnątrz każdego dnia jest zachowana
+
+**AC2 — Parametry per ćwiczenie w planie (nie globalnie)**
+*Given* dokładam ćwiczenie "Wyciskanie" do dnia "Push"
+*When* ustawiam liczba serii = 4, timer odpoczynku = 3:00
+*Then* parametry zapisują się **dla tego ćwiczenia w tym planie** — to samo "Wyciskanie" w innym planie może mieć inne wartości (per `PlannedExercise`, nie per `Exercise`)
+
+**AC3 — Edycja kolejności ćwiczeń w dniu**
+*Given* dzień "Push" ma 5 ćwiczeń
+*When* przenoszę "Rozpiętki" z pozycji 5 na pozycję 2
+*Then* nowa kolejność jest zapisana i odzwierciedlona przy starcie kolejnej sesji tego dnia
+
+**AC4 — Edycja planu po zarejestrowanych sesjach**
+*Given* mam plan z 8 zarejestrowanymi (Completed) sesjami
+*When* dokładam nowe ćwiczenie do dnia "Pull" lub zmieniam liczbę serii w istniejącym
+*Then* zmiany dotyczą **wyłącznie przyszłych** sesji; 8 historycznych sesji pozostaje nienaruszone (invariant "Completed session jest read-only" — Faza 5)
+
+---
+
+### 4.3 Sesja treningu
+
+> Mapuje na: MUST §2 (Sesja treningu) · OST Opp 1.1 · Walidacja assumption **A2** (sekcja 3.4)
+
+**Jako** doświadczony amator siłowni,
+**chcę** zalogować pojedynczą serię (reps × ciężar × RPE) w 2–3 sekundy mierzonego czasu,
+**żeby** nie tracić timera odpoczynku, flow treningu, ani świadomości "ile zostało serii do końca".
+
+**AC1 — Start sesji z planu**
+*Given* mam aktywny plan z 3 dniami
+*When* wybieram plan → dzień "Push" → "Zacznij sesję"
+*Then* otwiera się ekran sesji z listą ćwiczeń tego dnia w kolejności z planu; pierwsze ćwiczenie aktywne; pola input pre-fill: liczba serii z planu, ciężar z ostatniej sesji tego ćwiczenia (jeśli była)
+
+**AC2 — Logowanie serii w ≤ 3 sekundy**
+*Given* jestem na ekranie sesji, ciężar pre-fill z poprzedniej sesji = 80 kg
+*When* wpisuję reps = 8, zostawiam ciężar, taguję RPE "Normalna", potwierdzam
+*Then* seria zapisuje się w ≤ 3 sekundy mierzonego czasu (kryterium falsyfikacji A2 z OST §3.4); timer odpoczynku startuje automatycznie (patrz 4.5)
+
+**AC3 — Edycja świeżo zapisanej serii w trakcie sesji**
+*Given* zalogowałem serię z błędem (80 kg zamiast 90 kg)
+*When* tap'uję na tę serię w liście tego ćwiczenia
+*Then* mogę zmienić dowolne pole; korekta nadpisuje istniejący `LoggedSet`, nie tworzy nowego
+
+**AC4 — Pauza i kontynuacja sesji**
+*Given* sesja jest w stanie `InProgress`, zalogowałem 3 z 12 serii
+*When* zamykam apkę / wychodzę na 30 minut i wracam
+*Then* sesja czeka w `InProgress`, wszystkie 3 serie zachowane, mogę kontynuować od czwartej
+
+**AC5 — Zakończenie sesji**
+*Given* zalogowałem wszystkie zaplanowane serie (lub świadomie kończę wcześniej)
+*When* klikam "Zakończ sesję"
+*Then* sesja przechodzi do `Completed` (od tej chwili read-only — Faza 5 invariant); wracam do ekranu głównego z potwierdzeniem zapisu
+
+---
+
+### 4.4 Ile było ostatnio (Last Set Preview)
+
+> Mapuje na: MUST §2 (Killer feature) · OST Opp 1.2 · Walidacja assumption **A3** (sekcja 3.4)
+
+**Jako** doświadczony amator siłowni,
+**chcę** widzieć inline w trakcie wykonywania serii: ostatnią zarejestrowaną serię na *tym samym* ćwiczeniu z poprzedniej sesji (reps × ciężar × RPE),
+**żeby** w 2 sekundy zdecydować "próbuję pobić czy trzymam ten sam ciężar" — bez wychodzenia z ekranu sesji.
+
+**AC1 — Preview obecny od momentu aktywacji ćwiczenia**
+*Given* jestem na ekranie sesji, aktywne ćwiczenie to "Wyciskanie", w historii mam co najmniej jedną zarejestrowaną serię tego ćwiczenia
+*When* ćwiczenie staje się aktywne (otwieram je do logowania)
+*Then* inline obok pól reps/ciężar widoczna jedna linia: ostatnia seria "8 × 80 kg / Normalna" + względna data ostatniej sesji ("3 dni temu")
+
+**AC2 — Brak historii = explicit komunikat, nie pusty placeholder**
+*Given* dodaję nowe ćwiczenie do planu, brak historii
+*When* uruchamiam sesję i jestem na tym ćwiczeniu
+*Then* w miejscu preview widzę explicit "Brak poprzedniej sesji" — nie pusty element, który da się pomylić z "ładuję dane"
+
+**AC3 — "Ostatnia" = ostatnia seria z ostatniej *ukończonej* sesji tego ćwiczenia**
+*Given* w ostatniej Completed sesji wycisku miałem 3 serie: 8×80, 8×80, 6×80
+*When* startuję nową sesję na tym ćwiczeniu
+*Then* preview pokazuje ostatnią chronologicznie serię (6×80), **nie** best set ani średnią — referencja do decyzji "powtarzam czy próbuję więcej"
+
+**AC4 — Preview jednoliniowy, zawsze widoczny, bez wymuszania nawigacji**
+*Given* jestem w trakcie aktywnej serii i potrzebuję porównać z poprzednim wynikiem
+*When* spoglądam na preview
+*Then* preview jest **jednoliniowy i widoczny stale** dopóki ćwiczenie jest aktywne — nie wymaga tapa, dropdownu, bottom sheet, ani opuszczania ekranu sesji (rozszerzenie do 3–5 wyników → tylko po falsyfikacji A3, OST §3.4)
+
+---
+
+### 4.5 Timer odpoczynku
+
+> Mapuje na: MUST §2 (Timer odpoczynku) · OST Opp 1.3
+
+**Jako** doświadczony amator siłowni,
+**chcę** automatyczny timer odpoczynku po zalogowaniu każdej serii **oraz** rzeczywisty czas odpoczynku zapisany do historii,
+**żeby** za pół roku patrząc na "max na klatę" wiedzieć, czy robiłem to z 2 min czy 5 min przerwami — bo to *zupełnie inny* wynik.
+
+**AC1 — Auto-start timera po zalogowaniu serii**
+*Given* właśnie zalogowałem serię aktywnego ćwiczenia
+*When* potwierdzenie serii się zapisuje
+*Then* timer startuje **automatycznie** z czasem zdefiniowanym dla tego ćwiczenia w planie (np. 3:00); widoczny prominentnie na ekranie sesji
+
+**AC2 — Zapis rzeczywistego czasu odpoczynku**
+*Given* timer chodzi, planowany czas = 3:00
+*When* po 2:14 klikam "kolejna seria"
+*Then* rzeczywisty czas 2:14 zapisuje się jako pole `restBeforeSeconds` w *kolejnej* `LoggedSet` (nie planowany 3:00); widoczny później w Stats Lite per seria
+
+**AC3 — Sygnał na koniec planowanego czasu, timer dalej liczy**
+*Given* timer chodzi, planowany czas = 3:00
+*When* osiąga 3:00 bez kliknięcia "kolejna seria"
+*Then* apka emituje sygnał (wibracja + opcjonalny dźwięk); timer **dalej mierzy rzeczywisty czas** aż do startu kolejnej serii — żeby uchwycić odpoczynki 4:30 / 5:00 bez ucinania danych
+
+**AC4 — Pierwsza seria ćwiczenia bez czasu odpoczynku**
+*Given* logguję pierwszą serię ćwiczenia w danej sesji (brak poprzedniej serii tego samego ćwiczenia w tej sesji)
+*When* seria zapisuje się
+*Then* pole `restBeforeSeconds` tej serii pozostaje `null` — nie ma czego mierzyć przed pierwszą serią; Stats Lite renderuje to jako "—"
+
+---
+
+### 4.6 Stats Lite
+
+> Mapuje na: MUST §2 (Stats Lite) · OST Opp 3.1 · Walidacja assumption **A1** (sekcja 3.4) — **HIGHEST risk**
+
+**Jako** doświadczony amator siłowni,
+**chcę** otworzyć ekran konkretnego ćwiczenia i w ≤ 10 sekund odpowiedzieć "czy idę w górę vs 3 miesiące temu",
+**żeby** świadomie decydować o kolejnym cyklu planu — bez wracania do notatek ani mental cherry-picking.
+
+**AC1 — Lista historyczna, 90 dni domyślnie**
+*Given* mam w historii 5 miesięcy sesji wyciskania
+*When* otwieram Stats Lite dla "Wyciskanie"
+*Then* widzę chronologiczną listę wszystkich `LoggedSet` (najnowsze góra) z ostatnich 90 dni; każdy wpis: data sesji, reps × ciężar × RPE, rzeczywisty czas odpoczynku przed serią
+
+**AC2 — Filtr okresu**
+*Given* jestem w Stats Lite ćwiczenia
+*When* zmieniam filtr na "30 dni" / "90 dni" / "rok" / "wszystko"
+*Then* lista re-renderuje się natychmiast (< 200 ms), pokazując odpowiedni zakres
+
+**AC3 — Best set highlighted**
+*Given* lista zawiera N serii w wybranym zakresie
+*When* przeglądam listę
+*Then* best set (najwyższy estymowany 1RM — wybór formuły, np. Epley/Brzycki → Faza 5) jest wyraźnie wyróżniony; przy ex-aequo — wyróżnione wszystkie
+
+**AC4 — Brak wykresów (świadomy scope MVP)**
+*Given* jestem w Stats Lite
+*When* eksploruję dostępne widoki
+*Then* widzę wyłącznie listę + filtr okresu — żadnych wykresów (wykresy progresu per grupa mięśniowa → v1.1, MoSCoW §2). Realne używanie przez 3 miesiące walidują A1 (OST §3.4)
+
+**AC5 — Ćwiczenia usunięte z biblioteki**
+*Given* w historii mam serie ćwiczenia usuniętego z biblioteki (patrz 4.1 AC4)
+*When* przeglądam listę ćwiczeń w Stats Lite
+*Then* widzę je z markerem "usunięte"; mogę otworzyć ich historię ale historia jest read-only (nie da się dodać nowej serii bez przywrócenia w bibliotece)
+
+---
+
+### 4.7 Zero-friction onboarding (lokalna persystencja)
+
+> Mapuje na: MUST §2 (Lokalna persystencja) · OST Opp E.1 (enabler dla wszystkich trzech momentów)
+
+**Jako** doświadczony amator siłowni,
+**chcę** zainstalować apkę i być w pełni funkcjonalnym ekranie biblioteki / planów / sesji **bez konta, bez internetu i bez tutoriala**,
+**żeby** w scenariuszu "instaluję o 18:30, idę trenować o 19:00" zdążyć zarejestrować pierwszą serię tego samego dnia.
+
+**AC1 — Pierwsze uruchomienie wprost do głównego UI**
+*Given* właśnie zainstalowałem apkę i odpalam po raz pierwszy
+*When* aplikacja kończy ładowanie
+*Then* trafiam na główny ekran nawigacyjny — **bez** ekranu logowania, ekranu powitalnego, coach marks ani tutoriala
+
+**AC2 — Pełna funkcjonalność offline**
+*Given* mam apkę zainstalowaną, telefon w trybie samolotowym
+*When* używam apki: dodaję ćwiczenia, składam plan, loguję sesję
+*Then* wszystkie ścieżki MUST §2 działają identycznie jak online — żadna nie wymaga internetu
+
+**AC3 — Brak zbierania danych konta / e-maila**
+*Given* eksploruję apkę po pierwszej instalacji
+*When* korzystam ze wszystkich funkcji MUST §2
+*Then* w żadnym momencie apka nie pyta o e-mail, hasło ani identyfikator usera; uprawnienia systemowe — tylko te realnie wymagane przez konkretny feature (wibracja dla timera, opcjonalnie powiadomienia)
+
+**AC4 — Persystencja po restarcie urządzenia**
+*Given* mam 15 ćwiczeń, 2 plany, 30 zalogowanych sesji
+*When* restartuję telefon
+*Then* po ponownym otwarciu apki dane są w identycznym stanie — wybór silnika persystencji (Room + KSP) potwierdzony ADR-em w Fazie 6
 
 ---
 
