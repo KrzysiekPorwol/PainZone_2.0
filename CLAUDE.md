@@ -23,6 +23,13 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 - **ADR-y i ważne dokumenty designu** (`docs/adr/`, `docs/01-vision.md`, PRD, architecture docs, threat model, glossary): po polsku.
 - **Commit messages:** dwujęzyczne EN+PL (patrz skill `.claude/skills/commit/SKILL.md`).
 - **PR descriptions:** dwujęzyczne EN+PL.
+# Dokumentacja — dyscyplina tokenów
+
+- Każdy `docs/*.md` zaczyna się od `> TL;DR: [1 zdanie]` tuż pod nagłówkiem.
+- Cel: ~200 linii / plik. Powyżej 300 → rozbij na moduły lub tnie bez litości.
+- Nie duplikuj między docs — linkuj do źródła.
+- Każde zdanie zarabia: wartość dla Claude-context, portfolio lub nauki. 0/3 → wytnij.
+
 # Styl komunikacji
 
 ## Pytaj często
