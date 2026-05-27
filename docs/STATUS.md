@@ -2,7 +2,7 @@
 
 # Aktualny stan projektu
 
-- **Etap:** Faza 6 — Architektura + ADR + Threat Model — ✅ zamknięta. Outputy: `docs/06-architecture.md`, `docs/adr/0001..0006`, `docs/threat-model.md`. Następna: Faza 6.5 — Walking Skeleton (`docs/walking-skeleton.md`).
+- **Etap:** Faza 7 — Roadmap + jakość — ✅ zamknięta. Outputy: `docs/07-roadmap.md`, `docs/08-quality.md`, `docs/rules.md`. Faza designu zamknięta, gotowi do Fazy 8 (kod).
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
 - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
 

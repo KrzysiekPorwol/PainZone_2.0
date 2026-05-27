@@ -13,10 +13,9 @@
 | 4. Wireframes Lo-Fi | `docs/04-wireframes.md` | 🟢 done |
 | 5. Domain Model | `docs/05-domain.md` | 🟢 done |
 | 6. Architektura + ADR + Threat Model | `docs/06-architecture.md`, `docs/adr/*`, `docs/threat-model.md` | 🟢 done |
-| 6.5. Walking Skeleton | `docs/walking-skeleton.md` | ⏳ |
-| 7. Roadmap + jakość | `docs/07-roadmap.md`, `docs/08-quality.md` | ⏳ |
+| 7. Roadmap + jakość | `docs/07-roadmap.md`, `docs/08-quality.md`, `docs/rules.md` | 🟢 done |
 
-Artefakty żywe: `docs/glossary.md` · `docs/adr/`
+Artefakty żywe: `docs/glossary.md` · `docs/adr/` · `docs/rules.md`
 
 ## Fazy — cele
 

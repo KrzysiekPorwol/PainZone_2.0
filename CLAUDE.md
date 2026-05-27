@@ -48,3 +48,9 @@ Android app do śledzenia postępów i prowadzenia dzienniczka treningów na si�
 
 ## Wymaga jawnej zgody
 Przed jakąkolwiek nieodwracalną operacją git (force push, reset --hard, branch -D, rebase/amend na wypushowanych commitach) — **zawsze pytaj**.
+
+---
+
+# Sposób pracy nad kodem (Faza 8+)
+
+Mechanika sesji kodowania (1 task = 1 sesja, plan mode obowiązkowy przed Edit/Write, thinking-out-loud po polsku, wyjaśnianie na przykładach): `docs/rules.md`. Lista zadań: `docs/07-roadmap.md`. DoD ficzy + NFR: `docs/08-quality.md`.
