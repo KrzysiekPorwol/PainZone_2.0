@@ -14,7 +14,7 @@
 | UI | `androidx.activity:activity-compose` | 1.13.0 |
 | UI | `androidx.lifecycle:lifecycle-viewmodel-compose` | 2.10.0 |
 | Nawigacja | `androidx.navigation:navigation-compose` | 2.9.8 |
-| DI | `com.google.dagger:hilt-android` | 2.59.2 |
+| DI | `com.google.dagger:hilt-android` | 2.57.2 |
 | DB | `androidx.room:room-runtime` + `room-compiler` (KSP) | 2.8.4 |
 
 Uwaga: od Room 2.7 `room-ktx` jest scalony z `room-runtime` — nie dodawać osobno.
