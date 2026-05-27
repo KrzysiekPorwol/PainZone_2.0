@@ -27,15 +27,15 @@
 
 **US-1 · Biblioteka ćwiczeń** [4.1]
 Story: Zarządzam ~20 własnymi ćwiczeniami.
-AC: dodaj z pustej (nazwa+grupa) · zapis disabled bez wymaganych pól · edycja nazwy propaguje wszędzie bez utraty serii · usuń = ostrzeżenie ile planów/sesji używa; soft/hard delete → F5
+AC: dodaj z pustej (nazwa+grupa) · zapis disabled bez wymaganych pól · edycja nazwy propaguje w bibliotece i przyszłych sesjach (historyczne sesje zachowują nazwę z momentu sesji) · usuń = ostrzeżenie ile planów/sesji używa, soft delete (historia read-only, decyzja F5 — `05-domain-exercise.md`)
 
 **US-2 · Plany treningowe** [4.2]
 Story: Składam plan = dni × ćwiczenia żeby sesja miała kontekst.
-AC: stwórz plan z dniami (kolejność zachowana) · parametry (serie, timer) per ćwiczenie w planie, nie globalnie · reorder ćwiczeń aktywny od następnej sesji · edycja po Completed sesjach nie tyka historii
+AC: stwórz plan z dniami (kolejność zachowana) · parametry (docelowe reps per seria np. 10/9/8, timer) per ćwiczenie w planie, nie globalnie · ⭐ Aktywuj plan (≤1 aktywny na raz, karmi SmartCard w Trenuj) · reorder ćwiczeń aktywny od następnej sesji · edycja po Completed sesjach nie tyka historii
 
 **US-3 · Sesja treningu** [4.3]
 Story: Loguję serię w ≤3s żeby nie tracić flow.
-AC: start z planu z pre-fill (serie z planu, ciężar z ostatniej sesji) · log ≤3s + auto-start Rest Timer · edycja świeżej serii nadpisuje · pauza 30min → InProgress zachowany · "Zakończ" → Completed (read-only)
+AC: start z planu z pre-fill (cel reps z planu per seria, ciężar z ostatniej sesji) · log ≤3s + auto-start Rest Timer (z `restSeconds` planu) · RPE chips opcjonalne (zapis nie blokuje się na wyborze) · edycja świeżej serii nadpisuje · pauza 30min → InProgress zachowany · "Zakończ" → Completed (read-only)
 
 **US-4 · Last Set Preview** [4.4]
 Story: Widzę inline poprzedni wynik w 2s.

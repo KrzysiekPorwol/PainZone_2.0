@@ -6,8 +6,8 @@
 
 **S4** Edycja planu [PRD 4.2]
 Fields: Nazwa(text·autofocus·TopBar-title) · Dni(list·⠿drag·tap→S5·[✕]delete)
-Actions: [✓]→S2 · [🗑]→D1 · +Dzień→S5new · back-dirty→"Odrzucić zmiany?"
-States: nowy=brak[🗑]·empty-list; istniejący=z-dniami
+Actions: [✓]→S2 · [🗑]→D1 · [⭐]Aktywuj(toggle·invariant≤1·confirm-gdy-zmiana) · +Dzień→S5new · back-dirty→"Odrzucić zmiany?"
+States: nowy=brak[🗑]·brak[⭐]·empty-list; istniejący=z-dniami·[⭐]filled-gdy-aktywny
 
 **S5** Edycja dnia [PRD 4.2]
 Fields: Nazwa(text·autofocus) · Ćwiczenia(list·⠿drag·tap→M2·[✕]delete·subtitle:"N serie·T:00 odpocz.")
@@ -23,7 +23,7 @@ States: loaded=lista-pogrupowana; empty→CTA"Dodaj pierwsze"→M3
 Fields: PlanList(▾/▸expand-collapse·tap-dzień→zamknij+update-S1-suggestion)
 
 **M2** Parametry ćwiczenia [bottom sheet · PRD 4.2 AC2]
-Fields: Serie(stepper·min1·step1) · Timer(stepper·min0:30·step0:30)
+Fields: Serie(stepper·min1·step1·dodaje/usuwa-stepper-reps-z-końca-listy) · TargetReps(lista-N-stepperów·label"Seria K"·min1·step1·default·10·np.10/9/8) · Timer(stepper·min0:30·step0:30·"—"=null)
 Actions: [Anuluj] · [✓]Zapisz→S5
 
 **M3** Nowe ćwiczenie [bottom sheet · PRD 4.1 AC1–2]

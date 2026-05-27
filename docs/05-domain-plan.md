@@ -37,14 +37,12 @@
 | `plannedDayId` | `Long` | FK → PlannedDay, ON DELETE CASCADE |
 | `exerciseId` | `Long` | FK → Exercise, NO ACTION |
 | `order` | `Int` | >=0, unique within day |
-| `sets` | `Int` | >=1 |
-| `repsMin` | `Int` | >=1 |
-| `repsMax` | `Int` | >= repsMin |
-| `weight` | `Double?` | null lub >=0 |
+| `targetReps` | `List<Int>` | size >=1, każdy element >=1 (Room `@TypeConverter`) |
+| `restSeconds` | `Int?` | null lub >=0 (sekundy) |
 
-**Invarianty:** sets/reps constraints jw. `exerciseId` może wskazywać soft-deleted Exercise — UI edycji pokazuje marker "usunięte", read-only.
+**Invarianty:** `targetReps.isNotEmpty()`, `targetReps.all { it >= 1 }`. `sets` derived = `targetReps.size`. `exerciseId` może wskazywać soft-deleted Exercise — UI edycji pokazuje marker "usunięte", read-only.
 
-**Operacje:** `add(...)` (odrzuca dodanie soft-deleted Exercise) · `updateParams` · `reorder` · `remove(id)` (hard).
+**Operacje:** `add(dayId, exerciseId, targetReps, restSeconds?)` (odrzuca soft-deleted Exercise) · `updateParams` · `reorder` · `remove(id)` (hard).
 
 ### Aktywny plan — query
 `SELECT * FROM TrainingPlan WHERE isActive = 1 LIMIT 1` — start sesji z aktywnego, lub null = user wybiera ręcznie przy starcie.
@@ -59,6 +57,8 @@
 
 **`isActive` boolean vs osobna tabela ActivePlan:** boolean prostszy, invariant "≤1 active" enforced w repo (transakcja). Tabela `ActivePlan` z 1 rzędem = over-engineering.
 
-**`repsMin..repsMax` zamiast IntRange/single:** Room nie mapuje IntRange natywnie (wymaga TypeConverter), single int zbyt sztywne dla preskrypcji "8-12". Dwa Int = prosty schemat, łatwa walidacja, UI łatwo wyświetla zakres.
+**`targetReps: List<Int>` per seria zamiast zakresu/single:** wspiera strategię "stała sekwencja reps (np. 10/9/8) → progresja przez ciężar w kolejnej sesji". Zakres `repsMin..repsMax` gubi intencję per-serii, single Int wymusza identyczne reps we wszystkich seriach. Lista przez `@TypeConverter` (Room nie ma natywnego `List<Int>` — serializacja CSV).
 
-**Brak `restSeconds`/`targetRpe` w MVP:** YAGNI — RPE pojawia się w sesji po fakcie (US-3), rest interval nie blokuje logowania.
+**`restSeconds: Int?` per ćwiczenie:** PRD US-5 + USP §5 ("timer w historii kontekstualizuje wyniki") wymagają planowanego czasu — bez celu nie ma czego sygnalizować wibracją. null = brak celu (RestTimer countup bez alertu). Realny czas zawsze derived z `completedAt` ([[05-domain-session]] Rest interval) — `restSeconds` to *cel*, nie *wynik*.
+
+**Brak `targetRpe` w MVP:** YAGNI — RPE pojawia się w sesji po fakcie (US-3), nie pre-skrybujemy intensywności na planie. **Brak `weight` w planie:** US-3 AC = ciężar pre-fill z ostatniej sesji, plan świadomie nie kotwiczy ciężaru (progression sterowana z log historii).

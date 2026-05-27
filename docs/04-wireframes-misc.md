@@ -12,7 +12,7 @@ States: loaded; empty-filter("Brak serii w tym okresie · zmień filtr"); ćwicz
 **S11** Ustawienia [Flow IA · overflow ⋮]
 Fields: AboutSection(wersja·autor·link-repo·licencje-OSS) · DataSection([Usuń wszystkie dane](destructive)→D3)
 Actions: back→poprzedni-ekran
-States: MVP minimal (bez theme toggle — Material You system default)
+States: MVP minimal — sztywny **dark theme** Material 3 (bez theme toggle, bez Material You / dynamic color — wizja §7 Non-Goals)
 
 **D1** Usuń obiekt [dialog · S4/S5/S7]
 Fields: Title("Usunąć [obiekt]?") · Body(warning · gdy-ćwiczenie-w-użyciu: "Używane w N planach · M sesjach — historia zostanie zachowana jako read-only")

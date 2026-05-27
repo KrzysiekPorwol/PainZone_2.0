@@ -5,7 +5,7 @@
 ## Spec
 
 **S9** Sesja treningowa [PRD 4.3, 4.4, 4.5]
-Fields: TopBar(plan·dzień·"Ćw N/M"tap→sheet-jump-ćwiczeń-sesji) · ExerciseTitle("Nazwa · Seria K/L") · LastSetPreview("reps × kg / RPE — N dni temu" · brak→"Brak poprzedniej sesji") · InputRow(reps[stepper]·kg[stepper·step0.5·prefill-ostatnia-sesja]·RPE[chips:Łatwa/Normalna/Ciężka]·[✓]Zapisz) · LoggedList(odwr.chrono·tap-świeża→edycja-inline) · RestTimer(banner-bottom·mm:ss-countup·wibracja+dźwięk-po-Tplan)
+Fields: TopBar(plan·dzień·"Ćw N/M"tap→sheet-jump-ćwiczeń-sesji) · ExerciseTitle("Nazwa · Seria K/L · cel R pow.") · LastSetPreview("reps × kg / RPE — N dni temu" · gdy-rpe-null:"reps × kg — N dni temu" · brak→"Brak poprzedniej sesji") · InputRow(reps[stepper·prefill-cel-z-planu]·kg[stepper·step0.5·prefill-ostatnia-sesja]·RPE[chips:Łatwa/Normalna/Ciężka·optional·dim-gdy-niewybrane]·[✓]Zapisz·enabled-bez-RPE) · LoggedList(odwr.chrono·tap-świeża→edycja-inline) · RestTimer(banner-bottom·mm:ss-countup·wibracja+dźwięk-po-Tplan·gdy-Tplan-null:countup-bez-alertu)
 Actions: [✓]Zapisz→log+auto-RestTimer+focus-reps · [⋮]→D2 · ostatnia-seria-ćwiczenia→auto-advance+CTA"Następne ćwiczenie →" · ostatnia-seria-ostatnie-ćwiczenie→CTA"Zakończ sesję"→D2
 States: in-progress default; rest-active(timer+wibracja-po-Tplan); editing-fresh(tap-świeża→nadpisanie); paused(30min idle→banner "Wznów sesję"); empty-exercise(brak-serii→tylko-InputRow)
 

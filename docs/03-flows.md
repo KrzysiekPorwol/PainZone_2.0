@@ -1,6 +1,6 @@
 # User Flows + IA — PainZone 2.0
 
-> TL;DR: 3 zakładki (Trenuj/Plany/Postęp), 11 ekranów, 5 modali, 4 top flowy. Zatwierdzony 2026-05-26.
+> TL;DR: 3 zakładki (Trenuj/Plany/Postęp), 11 ekranów, 3 modale (M1-M3) + 3 dialogi (D1-D3), 4 top flowy. Zatwierdzony 2026-05-26.
 
 ## Spec
 
@@ -34,7 +34,7 @@
 
 ### Modale / dialogi
 
-M1 Picker plan/dzień (S1) · M2 Parametry ćwiczenia w planie (S5) · M3 Nowe ćwiczenie (S6) · D1 Usuń (S4/S7) · D2 Zakończ sesję (S9)
+M1 Picker plan/dzień (S1) · M2 Parametry ćwiczenia w planie (S5) · M3 Nowe ćwiczenie (S6) · D1 Usuń obiekt (S4/S5/S7) · D2 Zakończ sesję (S9) · D3 Reset danych (S11)
 
 ### Empty states
 
@@ -46,7 +46,7 @@ S1 brak planów → CTA "Stwórz pierwszy plan" → S4 · S2 pusto → ten sam C
 
 **F2 · Zacznij trening:** Otwarcie → [InProgress? → banner → S9 resume] / [S1 → historia? → smart card (akceptuj → start) / lista (M1 picker → start)] → S9 → loop {Last Set Preview → input reps/ciężar/RPE → save ≤3s → Rest Timer auto → ostatnia seria? → następne ćwiczenie} → Zakończ → D2 → Completed → S1.
 
-**F3 · Stwórz/edytuj plan:** S2 → +nowy/tap → S4 (nazwa · dni: + / reorder / usuń / tap → S5) → S5 (ćwiczenie: + → S6 / tap → M2 / reorder / usuń) → S6 (z biblioteki → S5 / +nowe → M3 → S5) → back chain S5→S4→S2.
+**F3 · Stwórz/edytuj plan:** S2 → +nowy/tap → S4 (nazwa · ⭐Aktywuj plan · dni: + / reorder / usuń / tap → S5) → S5 (ćwiczenie: + → S6 / tap → M2 / reorder / usuń) → S6 (z biblioteki → S5 / +nowe → M3 → S5) → back chain S5→S4→S2.
 
 **F4 · Zobacz progres:** S3 → historia? → [nie: empty → S1/S2] / [tak: lista → tap → S10 (lista + filtr 90d default + best set highlighted) → filtr 30d/90d/rok/wszystko / usunięte = read-only marker] → back.
 

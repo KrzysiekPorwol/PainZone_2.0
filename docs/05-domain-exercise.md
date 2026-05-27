@@ -8,7 +8,7 @@
 | Atrybut | Typ | Constraints |
 |---------|-----|-------------|
 | `id` | `Long` | PK, autoincrement |
-| `name` | `String` | non-blank (trim), **unique per user** wśród aktywnych |
+| `name` | `String` | non-blank (trim), **unique globalnie** wśród aktywnych (MVP bez kont — patrz Rationale) |
 | `muscleGroup` | `MuscleGroup` | non-null (enum) |
 | `createdAt` | `Instant` | non-null, set on insert |
 | `deletedAt` | `Instant?` | null = active, non-null = soft-deleted |
@@ -26,8 +26,8 @@
 - `restore(id)` → set `deletedAt = null` (post-MVP).
 
 **Pre-delete validation (US-1 AC):**
-- Query: liczba aktywnych `PlannedExercise` z `exerciseId == id`.
-- Jeśli > 0 → UI confirm: *"Ćwiczenie jest w N planie/planach (lista). Po usunięciu zostanie pominięte w sesjach z tych planów. Kontynuować?"*
+- Query: N = liczba aktywnych `PlannedExercise` z `exerciseId == id`; M = liczba `SessionExerciseSnapshot` (cała historia).
+- Jeśli `N + M > 0` → UI confirm (D1, [[04-wireframes-misc]]): *"Używane w N planach · M sesjach — historia zostanie zachowana jako read-only. Po usunięciu zostanie pominięte w sesjach z tych planów."*
 - User confirms → `softDelete` proceeds. User cancels → noop.
 
 **Relacje (out):**
@@ -51,6 +51,8 @@ Lista zamknięta. Lokalizacja PL w UI (mapa enum → string resource). Rozszerze
 Nie encja — query view: `SELECT * FROM exercise WHERE deletedAt IS NULL ORDER BY name`. Startuje pusta (USP §5).
 
 ## Rationale
+
+**"unique globalnie" w MVP bez kont:** Vision §5 + US-7 = zero kont, brak `user_id` w schemacie. "per user" byłoby pustym kwalifikatorem — w praktyce unique wśród wszystkich aktywnych rekordów na urządzeniu. Migracja do "per user" trywialna gdyby v1.1 wprowadziło konta.
 
 **Soft delete zamiast hard:** historia LoggedSet musi przetrwać usunięcie (US-6: Stats pokazuje "usunięte" ćwiczenia read-only). Hard delete złamałby invariant `LoggedSet.exerciseId != null` lub wymagał denormalizacji nazwy do każdego LoggedSet.
 

@@ -8,7 +8,7 @@
 | Atrybut | Typ | Constraints |
 |---|---|---|
 | `id` | `Long` | PK, autoincrement |
-| `plannedDayId` | `Long?` | FK → PlannedDay, ON DELETE SET NULL. NOT NULL przy insert. |
+| `plannedDayId` | `Long?` | FK → PlannedDay, schema nullable (`ON DELETE SET NULL`). Application invariant: non-null przy `start()`. |
 | `planNameSnapshot` | `String` | non-blank, immutable po insert |
 | `dayNameSnapshot` | `String` | non-blank, immutable po insert |
 | `startedAt` | `Instant` | non-null, set on insert |
@@ -27,10 +27,8 @@
 | `exerciseNameSnapshot` | `String` | non-blank, immutable |
 | `muscleGroupSnapshot` | `MuscleGroup` | non-null, immutable |
 | `order` | `Int` | >=0, unique within `sessionId` |
-| `plannedSets` | `Int` | >=1 |
-| `plannedRepsMin` | `Int` | >=1 |
-| `plannedRepsMax` | `Int` | >= `plannedRepsMin` |
-| `plannedWeight` | `Double?` | null lub >=0 |
+| `plannedTargetReps` | `List<Int>` | size >=1, każdy >=1 (`@TypeConverter`) |
+| `plannedRestSeconds` | `Int?` | null lub >=0 (sekundy) |
 
 **Invarianty:** Immutable po `WorkoutSession.start()` — snapshot z `PlannedExercise` w momencie startu. `exerciseId` może wskazywać soft-deleted Exercise (UI: marker "usunięte", nawigacja read-only).
 
@@ -60,13 +58,17 @@ Rest przed serią = `completedAt[n] - completedAt[n-1]` w obrębie tego samego `
 ### 1RM estimate — derived
 Epley: `weight × (1 + reps / 30)` per LoggedSet. Best set per Exercise = `MAX(1RM)` w okresie filtra (US-6).
 
+### Smart suggestion (S1) — derived
+- Plan: `TrainingPlan WHERE isActive = 1`. Brak aktywnego → SmartCard ukryty, S1 pokazuje PlanList.
+- Dzień: następny `PlannedDay.order` po dniu z `MAX(WorkoutSession.startedAt)` w obrębie tego planu (wrap-around modulo liczba dni). Brak historii → `PlannedDay` z `MIN(order)`.
+
 ## Rationale
 
 **`plannedDayId` nullable + SET NULL:** Plan można hard-delete ([[05-domain-plan]]), sesja przetrwa dzięki snapshotom nazw. NOT NULL tylko przy insert — egzekwuje decyzję "sesja tylko z planu" w punkcie startu.
 
 **`finishedAt: Instant?` zamiast enum statusu:** Dwa stany (in-progress/completed) wystarczają w MVP. "Abandoned" da się derive heurystyką (>24h bez serii) — explicit enum to YAGNI. Glossary `NotStarted` istnieje przed insertem (sesja nie utworzona) — nie wymaga reprezentacji w schemacie.
 
-**Snapshot pełen (name + muscleGroup + planned params):** Historia 100% samowystarczalna do wyświetlenia. `exerciseId` zachowany dla nawigacji UI ("zobacz w bibliotece") i agregacji cross-session (Last Set Preview, Stats Lite per-Exercise).
+**Snapshot pełen (name + muscleGroup + planned params):** Historia 100% samowystarczalna do wyświetlenia. `exerciseId` zachowany dla nawigacji UI ("zobacz w bibliotece") i agregacji cross-session (Last Set Preview, Stats Lite per-Exercise). **Rename Exercise**: propaguje do biblioteki i przyszłych sesji (live read `Exercise.name`), ale historyczne `SessionExerciseSnapshot.exerciseNameSnapshot` zostaje — historia odzwierciedla nazwę z momentu sesji. PRD US-1 "propaguje wszędzie" = wszędzie poza zamrożonymi snapshotami.
 
 **Snapshot immutable:** Edycja planu nie tyka istniejących sesji. Dodanie ćwiczenia do planu w trakcie sesji wpada do następnej, nie tej trwającej. ADR-kandydat na F6.
 
