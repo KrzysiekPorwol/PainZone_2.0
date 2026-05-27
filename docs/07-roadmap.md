@@ -15,7 +15,7 @@ Stack boot + 1 placeholder ekran end-to-end.
 - (zrobione) **M0.2 · Hilt setup** — `PainZoneApp @HiltAndroidApp`, `MainActivity @AndroidEntryPoint`, hilt-android-gradle-plugin.
 - (zrobione) **M0.3 · Compose theme** — `PainZoneTheme` sticky dark Material 3 (ADR-0005), `Color`/`Type` w `ui/theme/`.
 - (zrobione) **M0.4 · NavGraph + bottom bar** — `Routes` (@Serializable, ADR-0001) + `PainZoneNavHost` + Material 3 `NavigationBar` (Wariant B+ z `04-wireframes.md`).
-- **M0.5 · Room boot** — `PainZoneDatabase` v1 pusta + `TypeConverters` (`Instant`/`MuscleGroup`/`Rpe`) + `DatabaseModule` Hilt.
+- (zrobione) **M0.5 · Room boot** — `PainZoneDatabase` v1 + `Converters` (`Instant`/`MuscleGroup`/`Rpe`) + `DatabaseModule` Hilt. Minimalna `ExerciseEntity` (placeholder dla Room compiler — schema 1 entity, DAO/mapper w M1.2). Schema export `app/schemas/`.
 
 ### M1 · Library (US-1)
 Biblioteka ćwiczeń CRUD z soft delete.

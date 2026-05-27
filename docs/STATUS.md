@@ -2,7 +2,7 @@
 
 # Aktualny stan projektu
 
-- **Etap:** Faza 7 — Roadmap + jakość — ✅ zamknięta. Outputy: `docs/07-roadmap.md`, `docs/08-quality.md`, `docs/rules.md`. Faza designu zamknięta, gotowi do Fazy 8 (kod).
+- **Etap:** Faza 8 — Kod. Milestone **M0 (Walking Skeleton) ✅ zamknięty** (M0.1–M0.5). Następny: **M1.1 · Exercise encja**.
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
 - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
 
