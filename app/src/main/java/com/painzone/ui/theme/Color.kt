@@ -1,4 +1,4 @@
-package com.example.PainZone2_0.ui.theme
+package com.painzone.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

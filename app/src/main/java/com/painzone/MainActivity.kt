@@ -1,4 +1,4 @@
-package com.example.PainZone2_0
+package com.painzone
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.PainZone2_0.ui.theme.PainZone20Theme
+import com.painzone.ui.theme.PainZone20Theme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

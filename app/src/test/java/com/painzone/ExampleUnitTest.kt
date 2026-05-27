@@ -1,4 +1,4 @@
-package com.example.PainZone2_0
+package com.painzone
 
 import org.junit.Test
 
