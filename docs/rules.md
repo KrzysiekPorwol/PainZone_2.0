@@ -10,11 +10,16 @@
 - **Bez scope creep:** napotkany inny problem → notatka w TODO/issue, nie fix w tej sesji.
 - **Cross-task refactor:** wymaga jawnej zgody usera, nigdy oportunistycznie.
 
-### Tryb planowania (plan mode) — obowiązkowy przed pisaniem kodu
-- **Zawsze przed Edit/Write:** Claude wchodzi w plan mode (`ExitPlanMode` tool z draftem planu), pokazuje plan, czeka na akceptację. Dopiero po `approve` ruszają zmiany w plikach.
-- **Co w planie:** lista plików do utworzenia/zmiany · krótka logika każdego pliku · zależności · jakie testy · co manualnie zweryfikuję.
-- **Skip plan mode wolno tylko** dla trywialnych pojedynczych edycji (typo, 1-linijkowy fix) — i nawet wtedy 1 zdanie zapowiedzi.
-- Źródło: [Claude Code docs — plan mode](https://docs.claude.com/en/docs/claude-code/common-workflows#use-plan-mode).
+## Zasady pracy
+
+   **Sprawdzenie zalożeń w dokumentacji /docs** - budujemy rozwiązania zgodnie z zalożeniami w dokumentacji znajdującej się w folderze docs.
+   **Najpierw dokumentacja** — przed rozpoczęciem pracy użyj /context7-mvp, żeby sprawdzić aktualną dokumentację używanego rozwiązania.
+   **Aktualizowanie pliku 07-roadmap.md** - po skonczonym zadaniu w roadmap.md aktualizuj co juz jest zrobione a co jest do zrobienia.
+   **Plan** — przed jakąkolwiek zmianą w kodzie napisz plan. NIE implementuj dopóki plan nie zostanie zatwierdzony.
+   **Weryfikacja planu** — przedstaw plan, czekaj na uwagi, uwzględnij je. Powtarzaj aż do zatwierdzenia.
+   **Implementacja** — dopiero po zatwierdzeniu planu. Wprowadzaj zmiany małymi, testowalnymi krokami.
+   **Weryfikacja** — po każdej zmianie uruchom testy/build. Nigdy nie mów „gotowe" bez dowodu że działa.
+   **Podsumowanie** — po każdym kroku krótko opisz co się zmieniło i dlaczego.
 
 ### Komunikacja podczas pisania kodu
 - **Thinking-out-loud:** zanim utworzysz/edytujesz plik, w 2–4 zdaniach po polsku wyjaśnij:
@@ -27,7 +32,7 @@
 ### Standard jakości — MVP
 - Unit testy invariantów domain (`05-*.md`) — **obowiązkowe** (czysta Kotlin, brak Android deps).
 - Compose `@Preview` dla każdego stanu ekranu (loading/empty/content/error) — **obowiązkowe**.
-- Manual smoke test golden path przed commitem (skill `verify`) — **obowiązkowe**.
+- Manual smoke test golden path przed commitem (skill `verify`) — **obowiązkowe**. **Smoke test wykonuje Krzysiek**, nie Claude. Claude buduje, instaluje APK, a następnie zatrzymuje się ze zdaniem „**Twoja kolej — smoke test.**" i listą konkretnych rzeczy do sprawdzenia (1–5 punktów). Czeka na potwierdzenie („ok"/„działa") lub feedback przed commitem.
 - Integration testy (in-memory Room) — **odroczone do v1.1** (patrz `08-quality.md`).
 - Komentarze w kodzie tylko gdy non-obvious *why* (zgodnie z CLAUDE.md).
 

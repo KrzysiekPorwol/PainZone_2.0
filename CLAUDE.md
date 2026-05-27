@@ -53,4 +53,4 @@ Przed jakąkolwiek nieodwracalną operacją git (force push, reset --hard, branc
 
 # Sposób pracy nad kodem (Faza 8+)
 
-Mechanika sesji kodowania (1 task = 1 sesja, plan mode obowiązkowy przed Edit/Write, thinking-out-loud po polsku, wyjaśnianie na przykładach): `docs/rules.md`. Lista zadań: `docs/07-roadmap.md`. DoD ficzy + NFR: `docs/08-quality.md`.
+Gdy pracujemy nad faza 8, zawsze stosuj się do zasad zawartych w docs/rules.md

@@ -11,8 +11,8 @@
 
 ### M0 · Walking Skeleton
 Stack boot + 1 placeholder ekran end-to-end.
-- **M0.1 · Project bootstrap** — Gradle: Compose BOM 2026.03, minSdk 26, Kotlin + KSP + `kotlinx.serialization` plugins, deps z `06-architecture.md#Stack`.
-- **M0.2 · Hilt setup** — `PainZoneApp @HiltAndroidApp`, `MainActivity @AndroidEntryPoint`, hilt-android-gradle-plugin.
+- (zrobione) **M0.1 · Project bootstrap** — Gradle: Compose BOM 2026.03, minSdk 26, Kotlin + KSP + `kotlinx.serialization` plugins, deps z `06-architecture.md#Stack`.
+- (zrobione) **M0.2 · Hilt setup** — `PainZoneApp @HiltAndroidApp`, `MainActivity @AndroidEntryPoint`, hilt-android-gradle-plugin.
 - **M0.3 · Compose theme** — `PainZoneTheme` sticky dark Material 3 (ADR-0005), `Color`/`Type` w `ui/theme/`.
 - **M0.4 · NavGraph + bottom bar** — `Routes` (@Serializable, ADR-0001) + `PainZoneNavHost` + Material 3 `NavigationBar`; **aesthetic checkpoint** (2–3 warianty stylowania bottom bara do akceptacji przed kodem).
 - **M0.5 · Room boot** — `PainZoneDatabase` v1 pusta + `TypeConverters` (`Instant`/`MuscleGroup`/`Rpe`) + `DatabaseModule` Hilt.
