@@ -28,7 +28,7 @@ ui/
   theme/                    Color · Type · Theme (dark only)
   navigation/               NavGraph · Routes (@Serializable)
   common/                   shared composables (SmartCard, RpeChips, …)
-  library/  plans/  session/  history/  stats/  settings/
+  train/  library/  plans/  progress/  session/  history/  stats/  settings/
     └─ {Feature}Screen.kt + {Feature}ViewModel.kt + ui-state
 domain/
   exercise/  plan/  session/  common/
