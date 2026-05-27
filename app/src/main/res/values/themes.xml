@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.PainZone20" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Window-level base. Sticky dark per ADR-0005 — avoids flash before Compose renders. -->
+    <style name="Theme.PainZone20" parent="android:Theme.Material.NoActionBar" />
 </resources>
