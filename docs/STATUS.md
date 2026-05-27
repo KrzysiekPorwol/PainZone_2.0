@@ -2,7 +2,7 @@
 
 # Aktualny stan projektu
 
-- **Etap:** Faza 5 — Domain Model — ✅ zamknięta (3/3 modułów): exercise ✅, plan ✅, session ✅. Następna: Faza 6. Index: `docs/05-domain.md`.
+- **Etap:** Faza 6 — Architektura + ADR + Threat Model — ✅ zamknięta. Outputy: `docs/06-architecture.md`, `docs/adr/0001..0006`, `docs/threat-model.md`. Następna: Faza 6.5 — Walking Skeleton (`docs/walking-skeleton.md`).
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
 - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
 
