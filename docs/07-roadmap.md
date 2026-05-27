@@ -20,7 +20,7 @@ Stack boot + 1 placeholder ekran end-to-end.
 ### M1 · Library (US-1)
 Biblioteka ćwiczeń CRUD z soft delete.
 - (zrobione) **M1.1 · Exercise encja** — Pure Kotlin domain class + `MuscleGroup` (decyzja F5) + invarianty (`05-domain-exercise.md`) + unit testy.
-- **M1.2 · Exercise Room layer** — `ExerciseEntity` + `ExerciseDao` + mapper Entity↔Domain + migration v1.
+- (zrobione) **M1.2 · Exercise Room layer** — `ExerciseEntity` + `ExerciseDao` + mapper Entity↔Domain + migration v1.
 - **M1.3 · ExerciseRepository** — interfejs w `domain/`, impl w `data/`, Hilt binding, soft delete logic.
 - **M1.4 · LibraryScreen list + empty** — Compose + VM + `StateFlow` + `collectAsStateWithLifecycle` + previews.
 - **M1.5 · LibraryAddEditModal** — bottom sheet formularz, walidacja, save disabled bez wymaganych pól.

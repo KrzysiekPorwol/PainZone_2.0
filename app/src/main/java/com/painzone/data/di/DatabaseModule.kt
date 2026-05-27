@@ -3,6 +3,7 @@ package com.painzone.data.di
 import android.content.Context
 import androidx.room.Room
 import com.painzone.data.db.PainZoneDatabase
+import com.painzone.data.exercise.ExerciseDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,4 +22,7 @@ object DatabaseModule {
             PainZoneDatabase::class.java,
             "pz_db",
         ).build()
+
+    @Provides
+    fun provideExerciseDao(db: PainZoneDatabase): ExerciseDao = db.exerciseDao()
 }
