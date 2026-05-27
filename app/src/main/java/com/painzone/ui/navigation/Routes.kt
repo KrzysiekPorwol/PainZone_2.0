@@ -12,3 +12,6 @@ data object Plans : Route
 
 @Serializable
 data object Progress : Route
+
+@Serializable
+data object Library : Route
