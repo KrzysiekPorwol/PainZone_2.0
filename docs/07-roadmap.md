@@ -29,7 +29,7 @@ Biblioteka ćwiczeń CRUD z soft delete.
 
 ### M2 · Plans (US-2)
 Plany treningowe — dni × ćwiczenia z parametrami, ≤1 aktywny.
-- **M2.1 · Plan/PlanDay/PlanItem encje** — invarianty (kolejność, ≤1 aktywny, `restSeconds`/`targetRepsPerSet` per item) + unit testy.
+- (zrobione) **M2.1 · Plan/PlanDay/PlanItem encje** — `TrainingPlan`/`PlannedDay`/`PlannedExercise` pure Kotlin (domain/plan/) + invarianty (name trimmed/non-blank, `order>=0`, `targetReps` non-empty+`>=1`, `restSeconds` null|`>=0`, `sets` derived) + unit testy. ≤1 aktywny i uniqueness odłożone do `PlanRepository` (M2.3).
 - **M2.2 · Plan Room layer** — `PlanEntity` + `PlanDayEntity` + `PlanItemEntity` + DAO + relacje + migration v2.
 - **M2.3 · PlanRepository** — interfejs + impl + aktywacja atomowa (≤1 active guard).
 - **M2.4 · PlansScreen list + empty** — Compose + VM + previews.
