@@ -25,6 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.painzone.domain.exercise.CreateResult
 import com.painzone.domain.exercise.Exercise
 import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.ui.theme.PainZoneTheme
@@ -44,12 +48,25 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LibraryScaffold(
-        state = state,
-        onBack = onBack,
-        onAddExercise = { /* M1.5 — LibraryAddEditModal */ },
-        modifier = modifier,
-    )
+    var showAddModal by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        LibraryScaffold(
+            state = state,
+            onBack = onBack,
+            onAddExercise = { showAddModal = true },
+        )
+        if (showAddModal) {
+            LibraryAddEditModal(
+                onDismiss = { showAddModal = false },
+                onSubmit = { name, mg ->
+                    val result = viewModel.addExercise(name, mg)
+                    if (result is CreateResult.Success) showAddModal = false
+                    result
+                },
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +81,7 @@ private fun LibraryScaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Biblioteka") },
+                title = { Text("Biblioteka ćwiczeń") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(

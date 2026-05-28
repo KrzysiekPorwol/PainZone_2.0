@@ -75,6 +75,18 @@ fun PainZoneBottomBar(navController: NavHostController) {
     PainZoneBottomBarContent(
         currentDestination = currentDestination,
         onTabClick = { tab ->
+            // Drop any non-tab destination (e.g. Library) without saving its state,
+            // so it isn't restored as part of the underlying tab's back stack.
+            val onTab = topLevelTabs.any { t ->
+                currentDestination?.hierarchy?.any { it.hasRoute(t.routeClass) } == true
+            }
+            if (!onTab) {
+                navController.popBackStack(
+                    navController.graph.findStartDestination().id,
+                    inclusive = false,
+                    saveState = false,
+                )
+            }
             navController.navigate(tab.route) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
