@@ -23,4 +23,11 @@ object Converters {
 
     @TypeConverter
     fun intToRpe(value: Int?): Rpe? = value?.let(Rpe::fromIntValue)
+
+    @TypeConverter
+    fun intListToCsv(value: List<Int>?): String? = value?.joinToString(separator = ",")
+
+    @TypeConverter
+    fun csvToIntList(value: String?): List<Int>? =
+        value?.let { if (it.isEmpty()) emptyList() else it.split(",").map(String::toInt) }
 }
