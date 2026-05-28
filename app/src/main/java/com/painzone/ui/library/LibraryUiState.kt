@@ -2,6 +2,7 @@ package com.painzone.ui.library
 
 import com.painzone.domain.exercise.Exercise
 import com.painzone.domain.exercise.ExerciseUsage
+import com.painzone.domain.exercise.MuscleGroup
 
 sealed interface LibraryUiState {
     data object Loading : LibraryUiState
@@ -16,4 +17,14 @@ sealed interface DeleteDialogState {
         val exerciseName: String,
         val usage: ExerciseUsage,
     ) : DeleteDialogState
+}
+
+sealed interface EditDialogState {
+    data object Hidden : EditDialogState
+    data class Visible(
+        val exerciseId: Long,
+        val initialName: String,
+        val muscleGroup: MuscleGroup,
+        val usage: ExerciseUsage,
+    ) : EditDialogState
 }

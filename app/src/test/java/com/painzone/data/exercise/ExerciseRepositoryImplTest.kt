@@ -129,6 +129,21 @@ class ExerciseRepositoryImplTest {
     }
 
     @Test
+    fun `rename propagates new name to observeActive (library view)`() = runTest {
+        // M1.7 propagation contract: edit name → biblioteka i przyszłe sesje widzą nową nazwę.
+        // Historical snapshot immutability test deferred to M3.2 (SessionExerciseSnapshot powstanie wtedy).
+        val id = (repo.create("Bench", MuscleGroup.Chest) as CreateResult.Success).id
+
+        val result = repo.rename(id, "Incline bench")
+
+        assertEquals(RenameResult.Success, result)
+        val emitted = repo.observeActive().first()
+        assertEquals(1, emitted.size)
+        assertEquals("Incline bench", emitted.first().name)
+        assertEquals(id, emitted.first().id)
+    }
+
+    @Test
     fun `observeActive emits only records with null deletedAt`() = runTest {
         val active = (repo.create("Hip thrust", MuscleGroup.Legs) as CreateResult.Success).id
         val deleted = (repo.create("Calf raise", MuscleGroup.Legs) as CreateResult.Success).id

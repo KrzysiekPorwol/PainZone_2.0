@@ -1,5 +1,6 @@
 package com.painzone.ui.library
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,7 @@ fun LibraryScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val deleteState by viewModel.deleteDialogState.collectAsStateWithLifecycle()
+    val editState by viewModel.editDialogState.collectAsStateWithLifecycle()
     var showAddModal by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -68,6 +70,7 @@ fun LibraryScreen(
             snackbarHostState = snackbarHostState,
             onBack = onBack,
             onAddExercise = { showAddModal = true },
+            onRequestEdit = viewModel::requestEdit,
             onRequestDelete = viewModel::requestDelete,
         )
         if (showAddModal) {
@@ -78,6 +81,13 @@ fun LibraryScreen(
                     if (result is CreateResult.Success) showAddModal = false
                     result
                 },
+            )
+        }
+        (editState as? EditDialogState.Visible)?.let { visible ->
+            LibraryEditExerciseModal(
+                target = visible,
+                onSubmit = viewModel::renameExercise,
+                onDismiss = viewModel::cancelEdit,
             )
         }
         (deleteState as? DeleteDialogState.Visible)?.let { visible ->
@@ -98,6 +108,7 @@ private fun LibraryScaffold(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onAddExercise: () -> Unit,
+    onRequestEdit: (Long) -> Unit,
     onRequestDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -128,7 +139,12 @@ private fun LibraryScaffold(
         when (state) {
             LibraryUiState.Loading -> LoadingBody(innerPadding)
             LibraryUiState.Empty -> EmptyBody(innerPadding)
-            is LibraryUiState.Content -> ContentBody(state.items, innerPadding, onRequestDelete)
+            is LibraryUiState.Content -> ContentBody(
+                items = state.items,
+                innerPadding = innerPadding,
+                onRequestEdit = onRequestEdit,
+                onRequestDelete = onRequestDelete,
+            )
         }
     }
 }
@@ -177,6 +193,7 @@ private fun EmptyBody(innerPadding: PaddingValues) {
 private fun ContentBody(
     items: List<Exercise>,
     innerPadding: PaddingValues,
+    onRequestEdit: (Long) -> Unit,
     onRequestDelete: (Long) -> Unit,
 ) {
     LazyColumn(
@@ -196,6 +213,7 @@ private fun ContentBody(
                         )
                     }
                 },
+                modifier = Modifier.clickable { onRequestEdit(exercise.id) },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
@@ -220,6 +238,7 @@ private fun LibraryScreenLoadingPreview() {
                 snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestEdit = {},
                 onRequestDelete = {},
             )
         }
@@ -236,6 +255,7 @@ private fun LibraryScreenEmptyPreview() {
                 snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestEdit = {},
                 onRequestDelete = {},
             )
         }
@@ -252,6 +272,7 @@ private fun LibraryScreenContentPreview() {
                 snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestEdit = {},
                 onRequestDelete = {},
             )
         }
@@ -268,6 +289,7 @@ private fun LibraryScreenContentSinglePreview() {
                 snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestEdit = {},
                 onRequestDelete = {},
             )
         }
