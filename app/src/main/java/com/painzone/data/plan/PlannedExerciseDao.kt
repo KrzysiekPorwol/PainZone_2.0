@@ -26,4 +26,14 @@ interface PlannedExerciseDao {
 
     @Query("SELECT MAX(order_in_day) FROM planned_exercise WHERE planned_day_id = :dayId")
     suspend fun maxOrderInDay(dayId: Long): Int?
+
+    @Query(
+        """
+        SELECT COUNT(DISTINCT pd.training_plan_id)
+        FROM planned_exercise pe
+        JOIN planned_day pd ON pe.planned_day_id = pd.id
+        WHERE pe.exercise_id = :exerciseId
+        """,
+    )
+    suspend fun countDistinctPlansForExercise(exerciseId: Long): Int
 }

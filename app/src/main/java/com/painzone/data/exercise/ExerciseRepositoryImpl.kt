@@ -1,5 +1,6 @@
 package com.painzone.data.exercise
 
+import com.painzone.data.plan.PlannedExerciseDao
 import com.painzone.domain.exercise.CreateResult
 import com.painzone.domain.exercise.Exercise
 import com.painzone.domain.exercise.ExerciseRepository
@@ -16,6 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class ExerciseRepositoryImpl @Inject constructor(
     private val dao: ExerciseDao,
+    private val plannedExerciseDao: PlannedExerciseDao,
 ) : ExerciseRepository {
 
     override fun observeActive(): Flow<List<Exercise>> =
@@ -24,11 +26,12 @@ class ExerciseRepositoryImpl @Inject constructor(
     override suspend fun getById(id: Long): Exercise? =
         dao.getById(id)?.toDomain()
 
-    // Placeholder until Plans (M2) and Sessions (M3) exist.
-    // M2.3 will count PlanItems referencing this exerciseId;
-    // M3.3 will count distinct WorkoutSessions whose LoggedSets reference it.
+    // sessionsCount stays 0 until M3.3 (WorkoutSession layer exists).
     override suspend fun getUsageCount(id: Long): ExerciseUsage =
-        ExerciseUsage(plansCount = 0, sessionsCount = 0)
+        ExerciseUsage(
+            plansCount = plannedExerciseDao.countDistinctPlansForExercise(id),
+            sessionsCount = 0,
+        )
 
     override suspend fun create(name: String, muscleGroup: MuscleGroup): CreateResult {
         val trimmed = name.trim()

@@ -1,5 +1,7 @@
 package com.painzone.data.exercise
 
+import com.painzone.data.plan.PlannedExerciseDao
+import com.painzone.data.plan.PlannedExerciseEntity
 import com.painzone.domain.exercise.CreateResult
 import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.domain.exercise.RenameResult
@@ -8,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -19,12 +22,25 @@ import org.junit.Test
 class ExerciseRepositoryImplTest {
 
     private lateinit var dao: FakeExerciseDao
+    private lateinit var plannedDao: StubPlannedExerciseDao
     private lateinit var repo: ExerciseRepositoryImpl
 
     @Before
     fun setUp() {
         dao = FakeExerciseDao()
-        repo = ExerciseRepositoryImpl(dao)
+        plannedDao = StubPlannedExerciseDao()
+        repo = ExerciseRepositoryImpl(dao, plannedDao)
+    }
+
+    @Test
+    fun `getUsageCount surfaces plansCount from PlannedExerciseDao and zero sessions`() = runTest {
+        val id = (repo.create("Bench", MuscleGroup.Chest) as CreateResult.Success).id
+        plannedDao.plansCountFor[id] = 3
+
+        val usage = repo.getUsageCount(id)
+
+        assertEquals(3, usage.plansCount)
+        assertEquals(0, usage.sessionsCount)
     }
 
     @Test
@@ -189,4 +205,17 @@ private class FakeExerciseDao : ExerciseDao {
     private fun publish() {
         flow.value = store.values.toList()
     }
+}
+
+private class StubPlannedExerciseDao : PlannedExerciseDao {
+    val plansCountFor = mutableMapOf<Long, Int>()
+
+    override suspend fun insert(entity: PlannedExerciseEntity): Long = 0L
+    override suspend fun update(entity: PlannedExerciseEntity) = Unit
+    override suspend fun deleteById(id: Long) = Unit
+    override suspend fun getById(id: Long): PlannedExerciseEntity? = null
+    override fun observeByDayId(dayId: Long): Flow<List<PlannedExerciseEntity>> = flowOf(emptyList())
+    override suspend fun maxOrderInDay(dayId: Long): Int? = null
+    override suspend fun countDistinctPlansForExercise(exerciseId: Long): Int =
+        plansCountFor[exerciseId] ?: 0
 }

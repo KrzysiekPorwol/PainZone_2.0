@@ -1,7 +1,9 @@
 package com.painzone.data.di
 
 import com.painzone.data.exercise.ExerciseRepositoryImpl
+import com.painzone.data.plan.PlanRepositoryImpl
 import com.painzone.domain.exercise.ExerciseRepository
+import com.painzone.domain.plan.PlanRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,4 +17,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindExerciseRepository(impl: ExerciseRepositoryImpl): ExerciseRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlanRepository(impl: PlanRepositoryImpl): PlanRepository
 }

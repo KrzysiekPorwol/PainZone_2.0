@@ -26,4 +26,7 @@ interface PlannedDayDao {
 
     @Query("SELECT MAX(order_in_plan) FROM planned_day WHERE training_plan_id = :planId")
     suspend fun maxOrderInPlan(planId: Long): Int?
+
+    @Query("SELECT * FROM planned_day WHERE training_plan_id = :planId AND name = :name LIMIT 1")
+    suspend fun findInPlanByName(planId: Long, name: String): PlannedDayEntity?
 }

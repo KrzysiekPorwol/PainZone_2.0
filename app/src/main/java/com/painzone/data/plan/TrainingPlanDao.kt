@@ -39,6 +39,12 @@ interface TrainingPlanDao {
     suspend fun activateById(id: Long)
 
     @Transaction
+    suspend fun activateExclusive(id: Long) {
+        deactivateAll()
+        activateById(id)
+    }
+
+    @Transaction
     @Query("SELECT * FROM training_plan WHERE id = :id")
     suspend fun getWithDays(id: Long): PlanWithDays?
 

@@ -31,7 +31,7 @@ Biblioteka ćwiczeń CRUD z soft delete.
 Plany treningowe — dni × ćwiczenia z parametrami, ≤1 aktywny.
 - (zrobione) **M2.1 · Plan/PlanDay/PlanItem encje** — `TrainingPlan`/`PlannedDay`/`PlannedExercise` pure Kotlin (domain/plan/) + invarianty (name trimmed/non-blank, `order>=0`, `targetReps` non-empty+`>=1`, `restSeconds` null|`>=0`, `sets` derived) + unit testy. ≤1 aktywny i uniqueness odłożone do `PlanRepository` (M2.3).
 - (zrobione) **M2.2 · Plan Room layer** — `TrainingPlanEntity` + `PlannedDayEntity` + `PlannedExerciseEntity` + 3 DAO + `PlanWithDays`/`DayWithExercises` `@Relation` POJOs + `MIGRATION_1_2` (schema v2). `List<Int>` converter (CSV) dla `targetReps`. FK `exercise_id` ON DELETE NO ACTION (soft-delete Exercise zostawia referencję).
-- **M2.3 · PlanRepository** — interfejs + impl + aktywacja atomowa (≤1 active guard).
+- (zrobione) **M2.3 · PlanRepository** — interfejs w `domain/plan/` + impl w `data/plan/` + Hilt binding. Sealed result types per operacja (Plan/Day/Exercise). Atomowa aktywacja przez `@Transaction activateExclusive(id)` w `TrainingPlanDao` (deactivateAll + activateById). `addExercise` odrzuca soft-deleted Exercise (`ExerciseDeleted`). Reorder = prosty `update(order)`, pełny re-sequence odłożony do M2.7. `ExerciseRepository.getUsageCount.plansCount` podłączony przez `PlannedExerciseDao.countDistinctPlansForExercise` (sessionsCount=0 do M3.3).
 - **M2.4 · PlansScreen list + empty** — Compose + VM + previews.
 - **M2.5 · PlanCreateScreen** — formularz nazwa + dni (kolejność zachowana).
 - **M2.6 · PlanDetailScreen** — dodawanie itemów per dzień, parametry per item (target reps, rest).
