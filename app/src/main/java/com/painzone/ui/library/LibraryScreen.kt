@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -20,10 +21,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,13 +52,23 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val deleteState by viewModel.deleteDialogState.collectAsStateWithLifecycle()
     var showAddModal by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Box(modifier = modifier) {
         LibraryScaffold(
             state = state,
+            snackbarHostState = snackbarHostState,
             onBack = onBack,
             onAddExercise = { showAddModal = true },
+            onRequestDelete = viewModel::requestDelete,
         )
         if (showAddModal) {
             LibraryAddEditModal(
@@ -66,6 +80,14 @@ fun LibraryScreen(
                 },
             )
         }
+        (deleteState as? DeleteDialogState.Visible)?.let { visible ->
+            LibraryDeleteWarningDialog(
+                exerciseName = visible.exerciseName,
+                usage = visible.usage,
+                onConfirm = viewModel::confirmDelete,
+                onDismiss = viewModel::cancelDelete,
+            )
+        }
     }
 }
 
@@ -73,8 +95,10 @@ fun LibraryScreen(
 @Composable
 private fun LibraryScaffold(
     state: LibraryUiState,
+    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onAddExercise: () -> Unit,
+    onRequestDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -99,11 +123,12 @@ private fun LibraryScaffold(
                 text = { Text("Nowe ćwiczenie") },
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         when (state) {
             LibraryUiState.Loading -> LoadingBody(innerPadding)
             LibraryUiState.Empty -> EmptyBody(innerPadding)
-            is LibraryUiState.Content -> ContentBody(state.items, innerPadding)
+            is LibraryUiState.Content -> ContentBody(state.items, innerPadding, onRequestDelete)
         }
     }
 }
@@ -149,7 +174,11 @@ private fun EmptyBody(innerPadding: PaddingValues) {
 }
 
 @Composable
-private fun ContentBody(items: List<Exercise>, innerPadding: PaddingValues) {
+private fun ContentBody(
+    items: List<Exercise>,
+    innerPadding: PaddingValues,
+    onRequestDelete: (Long) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -159,6 +188,14 @@ private fun ContentBody(items: List<Exercise>, innerPadding: PaddingValues) {
             ListItem(
                 headlineContent = { Text(exercise.name) },
                 supportingContent = { Text(exercise.muscleGroup.labelPl) },
+                trailingContent = {
+                    IconButton(onClick = { onRequestDelete(exercise.id) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Usuń ${exercise.name}",
+                        )
+                    }
+                },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
@@ -180,8 +217,10 @@ private fun LibraryScreenLoadingPreview() {
         Surface {
             LibraryScaffold(
                 state = LibraryUiState.Loading,
+                snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestDelete = {},
             )
         }
     }
@@ -194,8 +233,10 @@ private fun LibraryScreenEmptyPreview() {
         Surface {
             LibraryScaffold(
                 state = LibraryUiState.Empty,
+                snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestDelete = {},
             )
         }
     }
@@ -208,8 +249,10 @@ private fun LibraryScreenContentPreview() {
         Surface {
             LibraryScaffold(
                 state = LibraryUiState.Content(previewExercises),
+                snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestDelete = {},
             )
         }
     }
@@ -222,8 +265,10 @@ private fun LibraryScreenContentSinglePreview() {
         Surface {
             LibraryScaffold(
                 state = LibraryUiState.Content(previewExercises.take(1)),
+                snackbarHostState = remember { SnackbarHostState() },
                 onBack = {},
                 onAddExercise = {},
+                onRequestDelete = {},
             )
         }
     }

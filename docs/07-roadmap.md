@@ -24,7 +24,7 @@ Biblioteka ćwiczeń CRUD z soft delete.
 - (zrobione) **M1.3 · ExerciseRepository** — interfejs w `domain/`, impl w `data/`, Hilt binding, soft delete logic.
 - (zrobione) **M1.4 · LibraryScreen list + empty** — S7 (`04-wireframes-library.md`) — Compose + VM + `StateFlow` + `collectAsStateWithLifecycle` + previews. Dostępny przez menu ⋮ z top-level (S1/S2/S3 wg `04-wireframes-toplevel.md`) — **brak w bottom barze**. Dodanie nowego ćwiczenia ma też drugą ścieżkę z S6 picker w trakcie budowania planu (M3 modal, scope: M2).
 - (zrobione) **M1.5 · LibraryAddEditModal** — bottom sheet formularz (tryb Add), walidacja real-time, save disabled bez wymaganych pól, error inline dla DuplicateName. Tryb Edit odłożony do M1.7.
-- **M1.6 · LibraryDeleteWarningDialog** — licznik użyć w planach/sesjach, soft delete on confirm.
+- (zrobione) **M1.6 · LibraryDeleteWarningDialog** — dialog z counterem (placeholder 0/0 do M2.3/M3.3), soft delete on confirm + snackbar „Usunięto", trailing ikona kosza w wierszu listy.
 - **M1.7 · Edycja Exercise — propagacja** — nazwa zmienia się w bibliotece i przyszłych sesjach, historyczne snapshoty nietknięte (test).
 
 ### M2 · Plans (US-2)

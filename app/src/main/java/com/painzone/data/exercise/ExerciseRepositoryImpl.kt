@@ -3,6 +3,7 @@ package com.painzone.data.exercise
 import com.painzone.domain.exercise.CreateResult
 import com.painzone.domain.exercise.Exercise
 import com.painzone.domain.exercise.ExerciseRepository
+import com.painzone.domain.exercise.ExerciseUsage
 import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.domain.exercise.RenameResult
 import com.painzone.domain.exercise.SoftDeleteResult
@@ -22,6 +23,12 @@ class ExerciseRepositoryImpl @Inject constructor(
 
     override suspend fun getById(id: Long): Exercise? =
         dao.getById(id)?.toDomain()
+
+    // Placeholder until Plans (M2) and Sessions (M3) exist.
+    // M2.3 will count PlanItems referencing this exerciseId;
+    // M3.3 will count distinct WorkoutSessions whose LoggedSets reference it.
+    override suspend fun getUsageCount(id: Long): ExerciseUsage =
+        ExerciseUsage(plansCount = 0, sessionsCount = 0)
 
     override suspend fun create(name: String, muscleGroup: MuscleGroup): CreateResult {
         val trimmed = name.trim()
