@@ -8,6 +8,10 @@ import androidx.navigation.compose.composable
 import com.painzone.ui.library.LibraryScreen
 import com.painzone.ui.plans.PlanCreateScreen
 import com.painzone.ui.plans.PlansScreen
+import androidx.navigation.toRoute
+import com.painzone.ui.plans.detail.DayDetailScreen
+import com.painzone.ui.plans.detail.ExercisePickerScreen
+import com.painzone.ui.plans.detail.PlanDetailScreen
 import com.painzone.ui.progress.ProgressScreen
 import com.painzone.ui.train.TrainScreen
 
@@ -27,8 +31,7 @@ fun PainZoneNavHost(
             PlansScreen(
                 onManageLibrary = onManageLibrary,
                 onCreatePlan = { navController.navigate(PlanCreate) },
-                // TODO M2.6: navigate to PlanDetailScreen (S4).
-                onOpenPlan = {},
+                onOpenPlan = { planId -> navController.navigate(PlanDetail(planId)) },
             )
         }
         composable<Progress> { ProgressScreen(onManageLibrary = onManageLibrary) }
@@ -37,6 +40,28 @@ fun PainZoneNavHost(
             PlanCreateScreen(
                 onSaved = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
+            )
+        }
+        composable<PlanDetail> {
+            PlanDetailScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDay = { dayId, dayName ->
+                    navController.navigate(DayDetail(dayId, dayName))
+                },
+            )
+        }
+        composable<DayDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<DayDetail>()
+            DayDetailScreen(
+                dayName = args.dayName,
+                onBack = { navController.popBackStack() },
+                onAddExercise = { navController.navigate(ExercisePicker(args.dayId)) },
+            )
+        }
+        composable<ExercisePicker> {
+            ExercisePickerScreen(
+                onBack = { navController.popBackStack() },
+                onExerciseAdded = { navController.popBackStack() },
             )
         }
     }
