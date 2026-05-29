@@ -6,6 +6,7 @@ interface PlanRepository {
 
     // TrainingPlan
     fun observeAll(): Flow<List<TrainingPlan>>
+    fun observeSummaries(): Flow<List<PlanSummary>>
     fun observeActive(): Flow<TrainingPlan?>
     fun observePlanWithDays(id: Long): Flow<PlanWithDays?>
     suspend fun getById(id: Long): TrainingPlan?

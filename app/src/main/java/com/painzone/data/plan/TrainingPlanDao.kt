@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.painzone.data.plan.relation.PlanSummaryRow
 import com.painzone.data.plan.relation.PlanWithDays
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +26,18 @@ interface TrainingPlanDao {
 
     @Query("SELECT * FROM training_plan ORDER BY created_at DESC")
     fun observeAll(): Flow<List<TrainingPlanEntity>>
+
+    @Query(
+        """
+        SELECT tp.*, (
+            SELECT COUNT(*) FROM planned_day pd
+            WHERE pd.training_plan_id = tp.id
+        ) AS day_count
+        FROM training_plan tp
+        ORDER BY tp.created_at DESC
+        """,
+    )
+    fun observeSummaries(): Flow<List<PlanSummaryRow>>
 
     @Query("SELECT * FROM training_plan WHERE is_active = 1 LIMIT 1")
     fun observeActive(): Flow<TrainingPlanEntity?>

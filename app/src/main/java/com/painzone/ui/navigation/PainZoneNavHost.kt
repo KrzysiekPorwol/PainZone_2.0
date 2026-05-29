@@ -22,7 +22,14 @@ fun PainZoneNavHost(
         modifier = modifier,
     ) {
         composable<Train> { TrainScreen(onManageLibrary = onManageLibrary) }
-        composable<Plans> { PlansScreen(onManageLibrary = onManageLibrary) }
+        composable<Plans> {
+            PlansScreen(
+                onManageLibrary = onManageLibrary,
+                // TODO M2.5/M2.6: navigate to PlanCreateScreen / PlanDetailScreen (S4).
+                onCreatePlan = {},
+                onOpenPlan = {},
+            )
+        }
         composable<Progress> { ProgressScreen(onManageLibrary = onManageLibrary) }
         composable<Library> { LibraryScreen(onBack = { navController.popBackStack() }) }
     }

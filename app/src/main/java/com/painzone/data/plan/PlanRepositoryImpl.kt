@@ -9,6 +9,7 @@ import com.painzone.domain.plan.DayWithExercises
 import com.painzone.domain.plan.DeletePlanResult
 import com.painzone.domain.plan.DeleteResult
 import com.painzone.domain.plan.PlanRepository
+import com.painzone.domain.plan.PlanSummary
 import com.painzone.domain.plan.PlanWithDays
 import com.painzone.domain.plan.PlannedDay
 import com.painzone.domain.plan.PlannedExercise
@@ -34,6 +35,18 @@ class PlanRepositoryImpl @Inject constructor(
 
     override fun observeAll(): Flow<List<TrainingPlan>> =
         planDao.observeAll().map { list -> list.map(TrainingPlanEntity::toDomain) }
+
+    override fun observeSummaries(): Flow<List<PlanSummary>> =
+        planDao.observeSummaries().map { rows ->
+            rows.map { row ->
+                PlanSummary(
+                    id = row.plan.id,
+                    name = row.plan.name,
+                    isActive = row.plan.isActive,
+                    dayCount = row.dayCount,
+                )
+            }
+        }
 
     override fun observeActive(): Flow<TrainingPlan?> =
         planDao.observeActive().map { it?.toDomain() }

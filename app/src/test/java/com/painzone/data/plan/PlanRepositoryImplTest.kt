@@ -3,6 +3,7 @@ package com.painzone.data.plan
 import com.painzone.data.exercise.ExerciseDao
 import com.painzone.data.exercise.ExerciseEntity
 import com.painzone.data.plan.relation.DayWithExercises
+import com.painzone.data.plan.relation.PlanSummaryRow
 import com.painzone.data.plan.relation.PlanWithDays
 import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.domain.plan.ActivatePlanResult
@@ -296,6 +297,12 @@ private class FakeTrainingPlanDao : TrainingPlanDao {
 
     override fun observeAll(): Flow<List<TrainingPlanEntity>> =
         flow.map { it.sortedByDescending { p -> p.createdAt } }
+
+    override fun observeSummaries(): Flow<List<PlanSummaryRow>> =
+        flow.map { list ->
+            list.sortedByDescending { p -> p.createdAt }
+                .map { PlanSummaryRow(plan = it, dayCount = 0) }
+        }
 
     override fun observeActive(): Flow<TrainingPlanEntity?> =
         flow.map { list -> list.firstOrNull { it.isActive } }
