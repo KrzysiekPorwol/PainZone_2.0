@@ -2,7 +2,7 @@
 
 # Aktualny stan projektu
 
-- **Etap:** Faza 8 — Kod. Milestones **M0 (Walking Skeleton)** i **M1 (Library)** ✅ zamknięte (M0.1–M0.5, M1.1–M1.7). W M2: M2.1, M2.2, M2.3, M2.4, M2.5, M2.6, M2.7 ✅. Następny: **M2.8 · Aktywacja planu**.
+- **Etap:** Faza 8 — Kod. Milestones **M0 (Walking Skeleton)** i **M1 (Library)** ✅ zamknięte (M0.1–M0.5, M1.1–M1.7). **M2 (Plans)** ✅ zamknięte (M2.1–M2.9). Następny: **M3.1 · WorkoutSession + LoggedSet encje** (start M3 · Session).
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
 - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
 

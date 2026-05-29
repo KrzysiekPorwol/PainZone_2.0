@@ -8,6 +8,7 @@ sealed interface PlanDetailUiState {
     data object NotFound : PlanDetailUiState
     data class Content(
         val planName: String,
+        val isActive: Boolean,
         val days: List<PlannedDay>,
     ) : PlanDetailUiState
 }

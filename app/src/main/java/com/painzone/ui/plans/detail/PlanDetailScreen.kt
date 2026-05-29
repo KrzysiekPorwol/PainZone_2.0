@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -20,11 +22,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.painzone.domain.plan.PlannedDay
+import com.painzone.ui.plans.ActivationConfirmDialog
+import com.painzone.ui.plans.ActivationConfirmState
 import com.painzone.ui.theme.PainZoneTheme
 
 @Composable
@@ -43,25 +51,47 @@ fun PlanDetailScreen(
     viewModel: PlanDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val confirmState by viewModel.confirmState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     PlanDetailScaffold(
         state = state,
+        snackbarHostState = snackbarHostState,
         onBack = onBack,
         onOpenDay = onOpenDay,
+        onToggleActive = viewModel::onToggleActive,
         modifier = modifier,
     )
+    (confirmState as? ActivationConfirmState.Visible)?.let { visible ->
+        ActivationConfirmDialog(
+            state = visible,
+            onConfirm = viewModel::confirmActivation,
+            onDismiss = viewModel::cancelActivation,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlanDetailScaffold(
     state: PlanDetailUiState,
+    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onOpenDay: (dayId: Long, dayName: String) -> Unit,
+    onToggleActive: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val title = (state as? PlanDetailUiState.Content)?.planName ?: "Plan"
+    val content = state as? PlanDetailUiState.Content
+    val title = content?.planName ?: "Plan"
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(title) },
@@ -71,6 +101,29 @@ private fun PlanDetailScaffold(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Wróć",
                         )
+                    }
+                },
+                actions = {
+                    if (content != null) {
+                        IconButton(onClick = onToggleActive) {
+                            Icon(
+                                imageVector = if (content.isActive) {
+                                    Icons.Filled.Star
+                                } else {
+                                    Icons.Outlined.StarBorder
+                                },
+                                contentDescription = if (content.isActive) {
+                                    "Odznacz plan"
+                                } else {
+                                    "Aktywuj plan"
+                                },
+                                tint = if (content.isActive) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        }
                     }
                 },
             )
@@ -166,44 +219,53 @@ private val previewDays = listOf(
     PlannedDay(id = 3L, trainingPlanId = 1L, name = "Legs", order = 2),
 )
 
+@Composable
+private fun PlanDetailScaffoldPreview(state: PlanDetailUiState) {
+    PainZoneTheme {
+        Surface {
+            PlanDetailScaffold(
+                state = state,
+                snackbarHostState = remember { SnackbarHostState() },
+                onBack = {},
+                onOpenDay = { _, _ -> },
+                onToggleActive = {},
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true, name = "Loading")
 @Composable
 private fun PlanDetailLoadingPreview() {
-    PainZoneTheme {
-        Surface { PlanDetailScaffold(PlanDetailUiState.Loading, {}, { _, _ -> }) }
-    }
+    PlanDetailScaffoldPreview(PlanDetailUiState.Loading)
 }
 
 @Preview(showBackground = true, name = "Not found")
 @Composable
 private fun PlanDetailNotFoundPreview() {
-    PainZoneTheme {
-        Surface { PlanDetailScaffold(PlanDetailUiState.NotFound, {}, { _, _ -> }) }
-    }
+    PlanDetailScaffoldPreview(PlanDetailUiState.NotFound)
 }
 
 @Preview(showBackground = true, name = "Empty")
 @Composable
 private fun PlanDetailEmptyPreview() {
-    PainZoneTheme {
-        Surface {
-            PlanDetailScaffold(
-                PlanDetailUiState.Content(planName = "Nowy plan", days = emptyList()),
-                {}, { _, _ -> },
-            )
-        }
-    }
+    PlanDetailScaffoldPreview(
+        PlanDetailUiState.Content(planName = "Nowy plan", isActive = false, days = emptyList()),
+    )
 }
 
-@Preview(showBackground = true, name = "Content")
+@Preview(showBackground = true, name = "Content (inactive)")
 @Composable
 private fun PlanDetailContentPreview() {
-    PainZoneTheme {
-        Surface {
-            PlanDetailScaffold(
-                PlanDetailUiState.Content(planName = "Push/Pull/Legs", days = previewDays),
-                {}, { _, _ -> },
-            )
-        }
-    }
+    PlanDetailScaffoldPreview(
+        PlanDetailUiState.Content(planName = "Push/Pull/Legs", isActive = false, days = previewDays),
+    )
+}
+
+@Preview(showBackground = true, name = "Content (active)")
+@Composable
+private fun PlanDetailContentActivePreview() {
+    PlanDetailScaffoldPreview(
+        PlanDetailUiState.Content(planName = "Push/Pull/Legs", isActive = true, days = previewDays),
+    )
 }

@@ -107,6 +107,20 @@ class PlanRepositoryImplTest {
     }
 
     @Test
+    fun `deactivate clears active flag on the target plan only`() = runTest {
+        val a = (repo.create("A") as CreatePlanResult.Success).id
+        repo.setActive(a)
+
+        assertEquals(ActivatePlanResult.Success, repo.deactivate(a))
+        assertFalse(planDao.getById(a)!!.isActive)
+    }
+
+    @Test
+    fun `deactivate returns NotFound for unknown id`() = runTest {
+        assertEquals(ActivatePlanResult.NotFound, repo.deactivate(123L))
+    }
+
+    @Test
     fun `delete plan cascades to days and exercises`() = runTest {
         val planId = (repo.create("P") as CreatePlanResult.Success).id
         val dayId = (repo.addDay(planId, "Day 1") as AddDayResult.Success).id
@@ -358,6 +372,11 @@ private class FakeTrainingPlanDao : TrainingPlanDao {
 
     override suspend fun deactivateAll() {
         store.values.toList().forEach { store[it.id] = it.copy(isActive = false) }
+        publish()
+    }
+
+    override suspend fun deactivateById(id: Long) {
+        store[id]?.let { store[id] = it.copy(isActive = false) }
         publish()
     }
 

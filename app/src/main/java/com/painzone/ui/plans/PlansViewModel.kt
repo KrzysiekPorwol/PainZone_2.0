@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.painzone.domain.plan.DeletePlanResult
 import com.painzone.domain.plan.PlanRepository
+import com.painzone.domain.plan.PlanSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,8 +38,47 @@ class PlansViewModel @Inject constructor(
         MutableStateFlow<DeletePlanDialogState>(DeletePlanDialogState.Hidden)
     val deleteDialogState: StateFlow<DeletePlanDialogState> = _deleteDialogState.asStateFlow()
 
+    private val _confirmState =
+        MutableStateFlow<ActivationConfirmState>(ActivationConfirmState.Hidden)
+    val confirmState: StateFlow<ActivationConfirmState> = _confirmState.asStateFlow()
+
     private val _snackbarEvents = MutableSharedFlow<String>()
     val snackbarEvents: SharedFlow<String> = _snackbarEvents.asSharedFlow()
+
+    fun onToggleActive(plan: PlanSummary) {
+        val otherActive = (uiState.value as? PlansUiState.Content)?.items
+            ?.firstOrNull { it.isActive && it.id != plan.id }
+        when (val decision = activationDecision(plan.isActive, otherActive?.name)) {
+            ActivationDecision.Activate -> activate(plan.id)
+            ActivationDecision.Deactivate -> deactivate(plan.id)
+            is ActivationDecision.Confirm ->
+                _confirmState.value = ActivationConfirmState.Visible(
+                    planId = plan.id,
+                    planName = plan.name,
+                    currentActiveName = decision.currentActiveName,
+                )
+        }
+    }
+
+    fun confirmActivation() {
+        val current = _confirmState.value as? ActivationConfirmState.Visible ?: return
+        _confirmState.value = ActivationConfirmState.Hidden
+        activate(current.planId)
+    }
+
+    fun cancelActivation() {
+        _confirmState.value = ActivationConfirmState.Hidden
+    }
+
+    private fun activate(planId: Long) = viewModelScope.launch {
+        repository.setActive(planId)
+        _snackbarEvents.emit("Plan aktywowany")
+    }
+
+    private fun deactivate(planId: Long) = viewModelScope.launch {
+        repository.deactivate(planId)
+        _snackbarEvents.emit("Plan odznaczony")
+    }
 
     fun requestDelete(planId: Long, planName: String) {
         _deleteDialogState.value = DeletePlanDialogState.Visible(planId, planName)

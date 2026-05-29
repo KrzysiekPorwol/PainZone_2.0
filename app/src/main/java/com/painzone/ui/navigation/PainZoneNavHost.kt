@@ -2,6 +2,7 @@ package com.painzone.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,12 +22,22 @@ fun PainZoneNavHost(
     modifier: Modifier = Modifier,
 ) {
     val onManageLibrary: () -> Unit = { navController.navigate(Library) }
+    // Switch to the Plans tab with the same semantics as a bottom-bar tap.
+    val onGoToPlans: () -> Unit = {
+        navController.navigate(Plans) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
     NavHost(
         navController = navController,
         startDestination = Train,
         modifier = modifier,
     ) {
-        composable<Train> { TrainScreen(onManageLibrary = onManageLibrary) }
+        composable<Train> {
+            TrainScreen(onManageLibrary = onManageLibrary, onGoToPlans = onGoToPlans)
+        }
         composable<Plans> {
             PlansScreen(
                 onManageLibrary = onManageLibrary,

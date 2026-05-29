@@ -48,6 +48,9 @@ interface TrainingPlanDao {
     @Query("UPDATE training_plan SET is_active = 0")
     suspend fun deactivateAll()
 
+    @Query("UPDATE training_plan SET is_active = 0 WHERE id = :id")
+    suspend fun deactivateById(id: Long)
+
     @Query("UPDATE training_plan SET is_active = 1 WHERE id = :id")
     suspend fun activateById(id: Long)
 

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -53,6 +54,7 @@ fun PlansScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val deleteState by viewModel.deleteDialogState.collectAsStateWithLifecycle()
+    val confirmState by viewModel.confirmState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -68,6 +70,7 @@ fun PlansScreen(
             onManageLibrary = onManageLibrary,
             onCreatePlan = onCreatePlan,
             onOpenPlan = onOpenPlan,
+            onToggleActive = viewModel::onToggleActive,
             onRequestDelete = viewModel::requestDelete,
         )
         (deleteState as? DeletePlanDialogState.Visible)?.let { visible ->
@@ -75,6 +78,13 @@ fun PlansScreen(
                 planName = visible.planName,
                 onConfirm = viewModel::confirmDelete,
                 onDismiss = viewModel::cancelDelete,
+            )
+        }
+        (confirmState as? ActivationConfirmState.Visible)?.let { visible ->
+            ActivationConfirmDialog(
+                state = visible,
+                onConfirm = viewModel::confirmActivation,
+                onDismiss = viewModel::cancelActivation,
             )
         }
     }
@@ -87,6 +97,7 @@ private fun PlansScaffold(
     onManageLibrary: () -> Unit,
     onCreatePlan: () -> Unit,
     onOpenPlan: (Long) -> Unit,
+    onToggleActive: (PlanSummary) -> Unit,
     onRequestDelete: (Long, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -109,6 +120,7 @@ private fun PlansScaffold(
                 items = state.items,
                 innerPadding = innerPadding,
                 onOpenPlan = onOpenPlan,
+                onToggleActive = onToggleActive,
                 onRequestDelete = onRequestDelete,
             )
         }
@@ -160,6 +172,7 @@ private fun ContentBody(
     items: List<PlanSummary>,
     innerPadding: PaddingValues,
     onOpenPlan: (Long) -> Unit,
+    onToggleActive: (PlanSummary) -> Unit,
     onRequestDelete: (Long, String) -> Unit,
 ) {
     LazyColumn(
@@ -176,11 +189,23 @@ private fun ContentBody(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (plan.isActive) {
+                        IconButton(onClick = { onToggleActive(plan) }) {
                             Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = "Aktywny plan",
-                                tint = MaterialTheme.colorScheme.primary,
+                                imageVector = if (plan.isActive) {
+                                    Icons.Filled.Star
+                                } else {
+                                    Icons.Outlined.StarBorder
+                                },
+                                contentDescription = if (plan.isActive) {
+                                    "Odznacz plan ${plan.name}"
+                                } else {
+                                    "Aktywuj plan ${plan.name}"
+                                },
+                                tint = if (plan.isActive) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
                             )
                         }
                         IconButton(onClick = { onRequestDelete(plan.id, plan.name) }) {
@@ -247,6 +272,7 @@ private fun PlansScreenLoadingPreview() {
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onToggleActive = {},
                 onRequestDelete = { _, _ -> },
             )
         }
@@ -264,6 +290,7 @@ private fun PlansScreenEmptyPreview() {
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onToggleActive = {},
                 onRequestDelete = { _, _ -> },
             )
         }
@@ -281,6 +308,7 @@ private fun PlansScreenContentPreview() {
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onToggleActive = {},
                 onRequestDelete = { _, _ -> },
             )
         }
@@ -298,6 +326,7 @@ private fun PlansScreenContentSinglePreview() {
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onToggleActive = {},
                 onRequestDelete = { _, _ -> },
             )
         }

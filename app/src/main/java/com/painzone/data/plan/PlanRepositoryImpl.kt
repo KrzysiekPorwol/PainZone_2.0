@@ -82,6 +82,12 @@ class PlanRepositoryImpl @Inject constructor(
         return ActivatePlanResult.Success
     }
 
+    override suspend fun deactivate(id: Long): ActivatePlanResult {
+        planDao.getById(id) ?: return ActivatePlanResult.NotFound
+        planDao.deactivateById(id)
+        return ActivatePlanResult.Success
+    }
+
     override suspend fun delete(id: Long): DeletePlanResult {
         planDao.getById(id) ?: return DeletePlanResult.NotFound
         planDao.deleteById(id)

@@ -13,6 +13,7 @@ interface PlanRepository {
     suspend fun create(name: String): CreatePlanResult
     suspend fun rename(id: Long, newName: String): RenamePlanResult
     suspend fun setActive(id: Long): ActivatePlanResult
+    suspend fun deactivate(id: Long): ActivatePlanResult
     suspend fun delete(id: Long): DeletePlanResult
 
     // PlannedDay
