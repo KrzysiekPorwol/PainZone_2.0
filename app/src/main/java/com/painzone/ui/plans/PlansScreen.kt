@@ -5,24 +5,33 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -43,21 +52,42 @@ fun PlansScreen(
     viewModel: PlansViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    PlansScaffold(
-        state = state,
-        onManageLibrary = onManageLibrary,
-        onCreatePlan = onCreatePlan,
-        onOpenPlan = onOpenPlan,
-        modifier = modifier,
-    )
+    val deleteState by viewModel.deleteDialogState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    Box(modifier = modifier) {
+        PlansScaffold(
+            state = state,
+            snackbarHostState = snackbarHostState,
+            onManageLibrary = onManageLibrary,
+            onCreatePlan = onCreatePlan,
+            onOpenPlan = onOpenPlan,
+            onRequestDelete = viewModel::requestDelete,
+        )
+        (deleteState as? DeletePlanDialogState.Visible)?.let { visible ->
+            DeletePlanDialog(
+                planName = visible.planName,
+                onConfirm = viewModel::confirmDelete,
+                onDismiss = viewModel::cancelDelete,
+            )
+        }
+    }
 }
 
 @Composable
 private fun PlansScaffold(
     state: PlansUiState,
+    snackbarHostState: SnackbarHostState,
     onManageLibrary: () -> Unit,
     onCreatePlan: () -> Unit,
     onOpenPlan: (Long) -> Unit,
+    onRequestDelete: (Long, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -70,6 +100,7 @@ private fun PlansScaffold(
                 text = { Text("Nowy plan") },
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         when (state) {
             PlansUiState.Loading -> LoadingBody(innerPadding)
@@ -78,6 +109,7 @@ private fun PlansScaffold(
                 items = state.items,
                 innerPadding = innerPadding,
                 onOpenPlan = onOpenPlan,
+                onRequestDelete = onRequestDelete,
             )
         }
     }
@@ -128,6 +160,7 @@ private fun ContentBody(
     items: List<PlanSummary>,
     innerPadding: PaddingValues,
     onOpenPlan: (Long) -> Unit,
+    onRequestDelete: (Long, String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -139,12 +172,23 @@ private fun ContentBody(
                 headlineContent = { Text(plan.name) },
                 supportingContent = { Text(dayCountLabel(plan.dayCount)) },
                 trailingContent = {
-                    if (plan.isActive) {
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "Aktywny plan",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (plan.isActive) {
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "Aktywny plan",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        IconButton(onClick = { onRequestDelete(plan.id, plan.name) }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Usuń ${plan.name}",
+                            )
+                        }
                     }
                 },
                 modifier = Modifier.clickable { onOpenPlan(plan.id) },
@@ -152,6 +196,25 @@ private fun ContentBody(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
+}
+
+@Composable
+private fun DeletePlanDialog(
+    planName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Usunąć plan?") },
+        text = { Text("Plan „$planName” wraz ze wszystkimi ćwiczeniami zostanie usunięty.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("Usuń") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Anuluj") }
+        },
+    )
 }
 
 // Polish declension for "N training days per week":
@@ -180,9 +243,11 @@ private fun PlansScreenLoadingPreview() {
         Surface {
             PlansScaffold(
                 state = PlansUiState.Loading,
+                snackbarHostState = remember { SnackbarHostState() },
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onRequestDelete = { _, _ -> },
             )
         }
     }
@@ -195,9 +260,11 @@ private fun PlansScreenEmptyPreview() {
         Surface {
             PlansScaffold(
                 state = PlansUiState.Empty,
+                snackbarHostState = remember { SnackbarHostState() },
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onRequestDelete = { _, _ -> },
             )
         }
     }
@@ -210,9 +277,11 @@ private fun PlansScreenContentPreview() {
         Surface {
             PlansScaffold(
                 state = PlansUiState.Content(previewPlans),
+                snackbarHostState = remember { SnackbarHostState() },
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onRequestDelete = { _, _ -> },
             )
         }
     }
@@ -225,9 +294,11 @@ private fun PlansScreenContentSinglePreview() {
         Surface {
             PlansScaffold(
                 state = PlansUiState.Content(previewPlans.take(1)),
+                snackbarHostState = remember { SnackbarHostState() },
                 onManageLibrary = {},
                 onCreatePlan = {},
                 onOpenPlan = {},
+                onRequestDelete = { _, _ -> },
             )
         }
     }

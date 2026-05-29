@@ -7,3 +7,8 @@ sealed interface PlansUiState {
     data object Empty : PlansUiState
     data class Content(val items: List<PlanSummary>) : PlansUiState
 }
+
+sealed interface DeletePlanDialogState {
+    data object Hidden : DeletePlanDialogState
+    data class Visible(val planId: Long, val planName: String) : DeletePlanDialogState
+}

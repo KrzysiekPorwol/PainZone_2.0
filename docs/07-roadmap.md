@@ -37,6 +37,7 @@ Plany treningowe — dni × ćwiczenia z parametrami, ≤1 aktywny.
 - (zrobione) **M2.6 · PlanDetailScreen** — dodawanie itemów per dzień, parametry per item (target reps, rest).
 - (zrobione) **M2.7 · Reorder ćwiczeń** — drag&drop przez bibliotekę `sh.calvin.reorderable` (ADR-0007), uchwyt ↕ obok kosza. Repo `reorderExercises(dayId, orderedIds)` przepisuje `order=0..n` atomowo (`@Transaction reorderInDay`). „Efekt od następnej sesji" = naturalny (plan mutable + snapshot w sesji, M3).
 - **M2.8 · Aktywacja planu** — ⭐ toggle, ≤1 aktywny enforced, SmartCard placeholder na Trenuj.
+- (zrobione) **M2.9 · Usuwanie planu z listy** — kosz w wierszu `PlansScreen` + dialog potwierdzenia, hard delete (`PlanRepository.delete`, FK CASCADE na dni/ćwiczenia), snackbar „Usunięto". Bez ostrzeżenia o aktywnym planie (decyzja: aktywacją zarządza M2.8).
 
 ### M3 · Session (US-3, US-4, US-5)
 Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
