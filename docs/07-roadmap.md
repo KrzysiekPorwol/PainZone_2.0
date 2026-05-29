@@ -34,7 +34,7 @@ Plany treningowe — dni × ćwiczenia z parametrami, ≤1 aktywny.
 - (zrobione) **M2.3 · PlanRepository** — interfejs w `domain/plan/` + impl w `data/plan/` + Hilt binding. Sealed result types per operacja (Plan/Day/Exercise). Atomowa aktywacja przez `@Transaction activateExclusive(id)` w `TrainingPlanDao` (deactivateAll + activateById). `addExercise` odrzuca soft-deleted Exercise (`ExerciseDeleted`). Reorder = prosty `update(order)`, pełny re-sequence odłożony do M2.7. `ExerciseRepository.getUsageCount.plansCount` podłączony przez `PlannedExerciseDao.countDistinctPlansForExercise` (sessionsCount=0 do M3.3).
 - (zrobione) **M2.4 · PlansScreen list + empty** — Compose + VM + previews. Karta planu: nazwa + „N dni" + ⭐ aktywny (projekcja `PlanSummary`/`observeSummaries` COUNT dni, bez N+1). „ostatnio Xd" odłożone do M3 (sesje). Nawigacja do S4 (`onCreatePlan`/`onOpenPlan`) no-op do M2.5/M2.6.
 - (zrobione) **M2.5 · PlanCreateScreen** — formularz nazwa + dni (kolejność zachowana). Bufor w VM, zapis do bazy dopiero na ✓ (`create` → `addDay` w kolejności listy), back-dirty → „Odrzucić zmiany?". Dodawanie dnia przez dialog (walidacja niepuste+unikalne). UI labels „sesja treningowa" zamiast „dzień" (domena/kod dalej `PlannedDay`).
-- **M2.6 · PlanDetailScreen** — dodawanie itemów per dzień, parametry per item (target reps, rest).
+- (zrobione) **M2.6 · PlanDetailScreen** — dodawanie itemów per dzień, parametry per item (target reps, rest).
 - **M2.7 · Reorder ćwiczeń** — drag handle, efekt od następnej sesji.
 - **M2.8 · Aktywacja planu** — ⭐ toggle, ≤1 aktywny enforced, SmartCard placeholder na Trenuj.
 
