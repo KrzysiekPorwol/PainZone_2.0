@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.painzone.ui.library.LibraryScreen
+import com.painzone.ui.plans.PlanCreateScreen
 import com.painzone.ui.plans.PlansScreen
 import com.painzone.ui.progress.ProgressScreen
 import com.painzone.ui.train.TrainScreen
@@ -25,12 +26,18 @@ fun PainZoneNavHost(
         composable<Plans> {
             PlansScreen(
                 onManageLibrary = onManageLibrary,
-                // TODO M2.5/M2.6: navigate to PlanCreateScreen / PlanDetailScreen (S4).
-                onCreatePlan = {},
+                onCreatePlan = { navController.navigate(PlanCreate) },
+                // TODO M2.6: navigate to PlanDetailScreen (S4).
                 onOpenPlan = {},
             )
         }
         composable<Progress> { ProgressScreen(onManageLibrary = onManageLibrary) }
         composable<Library> { LibraryScreen(onBack = { navController.popBackStack() }) }
+        composable<PlanCreate> {
+            PlanCreateScreen(
+                onSaved = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },
+            )
+        }
     }
 }
