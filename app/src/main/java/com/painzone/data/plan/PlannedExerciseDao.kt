@@ -3,6 +3,7 @@ package com.painzone.data.plan
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -26,6 +27,15 @@ interface PlannedExerciseDao {
 
     @Query("SELECT MAX(order_in_day) FROM planned_exercise WHERE planned_day_id = :dayId")
     suspend fun maxOrderInDay(dayId: Long): Int?
+
+    @Query("UPDATE planned_exercise SET order_in_day = :order WHERE id = :id")
+    suspend fun updateOrder(id: Long, order: Int)
+
+    // Atomic: every item gets order = its index, or none does.
+    @Transaction
+    suspend fun reorderInDay(orderedIds: List<Long>) {
+        orderedIds.forEachIndexed { index, id -> updateOrder(id, index) }
+    }
 
     @Query(
         """

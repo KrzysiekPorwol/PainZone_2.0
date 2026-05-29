@@ -70,6 +70,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+    implementation(libs.reorderable)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)

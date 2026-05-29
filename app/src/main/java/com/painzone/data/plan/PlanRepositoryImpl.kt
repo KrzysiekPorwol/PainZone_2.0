@@ -159,9 +159,14 @@ class PlanRepositoryImpl @Inject constructor(
         return UpdateResult.Success
     }
 
-    override suspend fun reorderExercise(id: Long, newOrder: Int): ReorderResult {
-        val current = itemDao.getById(id)?.toDomain() ?: return ReorderResult.NotFound
-        itemDao.update(current.reorder(newOrder).toEntity())
+    override suspend fun reorderExercises(dayId: Long, orderedIds: List<Long>): ReorderResult {
+        // Reject if any id is missing or belongs to a different day — keeps order_in_day
+        // consistent within the day and guards against stale UI ids.
+        for (id in orderedIds) {
+            val item = itemDao.getById(id) ?: return ReorderResult.NotFound
+            if (item.plannedDayId != dayId) return ReorderResult.NotFound
+        }
+        itemDao.reorderInDay(orderedIds)
         return ReorderResult.Success
     }
 

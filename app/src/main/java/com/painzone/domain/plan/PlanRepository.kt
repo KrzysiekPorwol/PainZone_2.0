@@ -35,7 +35,9 @@ interface PlanRepository {
         targetReps: List<Int>,
         restSeconds: Int?,
     ): UpdateResult
-    suspend fun reorderExercise(id: Long, newOrder: Int): ReorderResult
+    // Persists the full new order of a day's exercises: order = index in orderedIds.
+    // Atomic re-sequence — avoids order collisions a single-item move would cause.
+    suspend fun reorderExercises(dayId: Long, orderedIds: List<Long>): ReorderResult
     suspend fun removeExercise(id: Long): DeleteResult
 }
 

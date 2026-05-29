@@ -59,6 +59,12 @@ class DayDetailViewModel @Inject constructor(
         planRepository.updateExerciseParams(plannedExerciseId, targetReps, restSeconds)
     }
 
+    fun reorder(orderedIds: List<Long>) {
+        viewModelScope.launch {
+            planRepository.reorderExercises(dayId, orderedIds)
+        }
+    }
+
     fun removeExercise(plannedExerciseId: Long, name: String) {
         viewModelScope.launch {
             planRepository.removeExercise(plannedExerciseId)

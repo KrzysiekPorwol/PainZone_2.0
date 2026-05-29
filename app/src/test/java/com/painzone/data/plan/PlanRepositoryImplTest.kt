@@ -14,6 +14,7 @@ import com.painzone.domain.plan.DeletePlanResult
 import com.painzone.domain.plan.DeleteResult
 import com.painzone.domain.plan.RenameDayResult
 import com.painzone.domain.plan.RenamePlanResult
+import com.painzone.domain.plan.ReorderResult
 import com.painzone.domain.plan.UpdateResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -241,6 +242,51 @@ class PlanRepositoryImplTest {
     }
 
     @Test
+    fun `reorderExercises rewrites order to the new sequence`() = runTest {
+        val planId = (repo.create("P") as CreatePlanResult.Success).id
+        val dayId = (repo.addDay(planId, "Day") as AddDayResult.Success).id
+        val exId = exerciseDao.seed("Bench", MuscleGroup.Chest)
+        val a = (repo.addExercise(dayId, exId, listOf(8), null) as AddExerciseResult.Success).id
+        val b = (repo.addExercise(dayId, exId, listOf(8), null) as AddExerciseResult.Success).id
+        val c = (repo.addExercise(dayId, exId, listOf(8), null) as AddExerciseResult.Success).id
+
+        val result = repo.reorderExercises(dayId, listOf(c, a, b))
+
+        assertEquals(ReorderResult.Success, result)
+        assertEquals(0, itemDao.getById(c)!!.order)
+        assertEquals(1, itemDao.getById(a)!!.order)
+        assertEquals(2, itemDao.getById(b)!!.order)
+    }
+
+    @Test
+    fun `reorderExercises is reflected in observeExercisesByDay`() = runTest {
+        val planId = (repo.create("P") as CreatePlanResult.Success).id
+        val dayId = (repo.addDay(planId, "Day") as AddDayResult.Success).id
+        val exId = exerciseDao.seed("Bench", MuscleGroup.Chest)
+        val a = (repo.addExercise(dayId, exId, listOf(8), null) as AddExerciseResult.Success).id
+        val b = (repo.addExercise(dayId, exId, listOf(8), null) as AddExerciseResult.Success).id
+
+        repo.reorderExercises(dayId, listOf(b, a))
+
+        val orderedIds = repo.observeExercisesByDay(dayId).first().map { it.id }
+        assertEquals(listOf(b, a), orderedIds)
+    }
+
+    @Test
+    fun `reorderExercises returns NotFound for an id from another day`() = runTest {
+        val planId = (repo.create("P") as CreatePlanResult.Success).id
+        val day1 = (repo.addDay(planId, "Day1") as AddDayResult.Success).id
+        val day2 = (repo.addDay(planId, "Day2") as AddDayResult.Success).id
+        val exId = exerciseDao.seed("Bench", MuscleGroup.Chest)
+        val a = (repo.addExercise(day1, exId, listOf(8), null) as AddExerciseResult.Success).id
+        val foreign = (repo.addExercise(day2, exId, listOf(8), null) as AddExerciseResult.Success).id
+
+        val result = repo.reorderExercises(day1, listOf(a, foreign))
+
+        assertEquals(ReorderResult.NotFound, result)
+    }
+
+    @Test
     fun `observeAll emits plans through the flow`() = runTest {
         repo.create("A")
         repo.create("B")
@@ -408,6 +454,11 @@ private class FakePlannedExerciseDao : PlannedExerciseDao {
 
     override suspend fun maxOrderInDay(dayId: Long): Int? =
         store.values.filter { it.plannedDayId == dayId }.maxOfOrNull { it.order }
+
+    override suspend fun updateOrder(id: Long, order: Int) {
+        store[id]?.let { store[id] = it.copy(order = order) }
+        publish()
+    }
 
     override suspend fun countDistinctPlansForExercise(exerciseId: Long): Int = 0
 

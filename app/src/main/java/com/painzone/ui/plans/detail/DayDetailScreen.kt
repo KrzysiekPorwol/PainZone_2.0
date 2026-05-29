@@ -1,18 +1,22 @@
 package com.painzone.ui.plans.detail
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -35,12 +39,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.painzone.ui.theme.PainZoneTheme
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun DayDetailScreen(
@@ -66,6 +74,7 @@ fun DayDetailScreen(
         onAddExercise = onAddExercise,
         onEditParams = { editingRow = it },
         onRemove = { viewModel.removeExercise(it.plannedExerciseId, it.name) },
+        onReorder = viewModel::reorder,
         modifier = modifier,
     )
 
@@ -91,6 +100,7 @@ private fun DayDetailScaffold(
     onAddExercise: () -> Unit,
     onEditParams: (PlannedExerciseRow) -> Unit,
     onRemove: (PlannedExerciseRow) -> Unit,
+    onReorder: (List<Long>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -128,6 +138,7 @@ private fun DayDetailScaffold(
                         innerPadding = innerPadding,
                         onEditParams = onEditParams,
                         onRemove = onRemove,
+                        onReorder = onReorder,
                     )
                 }
         }
@@ -178,27 +189,58 @@ private fun ExerciseList(
     innerPadding: PaddingValues,
     onEditParams: (PlannedExerciseRow) -> Unit,
     onRemove: (PlannedExerciseRow) -> Unit,
+    onReorder: (List<Long>) -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
+    val lazyListState = rememberLazyListState()
+    // Local working copy reordered live during drag; resynced whenever Room re-emits.
+    var ordered by remember { mutableStateOf(rows) }
+    LaunchedEffect(rows) { ordered = rows }
+
+    val reorderState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        ordered = ordered.toMutableList().apply { add(to.index, removeAt(from.index)) }
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
+
     LazyColumn(
+        state = lazyListState,
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding),
     ) {
-        items(items = rows, key = { it.plannedExerciseId }) { row ->
-            ListItem(
-                headlineContent = { Text(row.name) },
-                supportingContent = { Text(subtitle(row)) },
-                trailingContent = {
-                    IconButton(onClick = { onRemove(row) }) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = "Usuń ${row.name}",
-                        )
-                    }
-                },
-                modifier = Modifier.clickable { onEditParams(row) },
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        items(items = ordered, key = { it.plannedExerciseId }) { row ->
+            ReorderableItem(reorderState, key = row.plannedExerciseId) { isDragging ->
+                val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp, label = "dragElevation")
+                Surface(shadowElevation = elevation) {
+                    ListItem(
+                        headlineContent = { Text(row.name) },
+                        supportingContent = { Text(subtitle(row)) },
+                        trailingContent = {
+                            Row {
+                                IconButton(onClick = { onRemove(row) }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Delete,
+                                        contentDescription = "Usuń ${row.name}",
+                                    )
+                                }
+                                IconButton(
+                                    modifier = Modifier.draggableHandle(
+                                        onDragStopped = { onReorder(ordered.map { it.plannedExerciseId }) },
+                                    ),
+                                    onClick = {}, // handle only drives drag, not a tap action
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.SwapVert,
+                                        contentDescription = "Zmień kolejność: ${row.name}",
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier.clickable { onEditParams(row) },
+                    )
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
         }
     }
 }
@@ -234,7 +276,7 @@ private fun DayDetailLoadingPreview() {
                 dayName = "Push",
                 state = DayDetailUiState.Loading,
                 snackbarHostState = remember { SnackbarHostState() },
-                onBack = {}, onAddExercise = {}, onEditParams = {}, onRemove = {},
+                onBack = {}, onAddExercise = {}, onEditParams = {}, onRemove = {}, onReorder = {},
             )
         }
     }
@@ -249,7 +291,7 @@ private fun DayDetailEmptyPreview() {
                 dayName = "Push",
                 state = DayDetailUiState.Content(emptyList()),
                 snackbarHostState = remember { SnackbarHostState() },
-                onBack = {}, onAddExercise = {}, onEditParams = {}, onRemove = {},
+                onBack = {}, onAddExercise = {}, onEditParams = {}, onRemove = {}, onReorder = {},
             )
         }
     }
@@ -264,7 +306,7 @@ private fun DayDetailContentPreview() {
                 dayName = "Push",
                 state = DayDetailUiState.Content(previewRows),
                 snackbarHostState = remember { SnackbarHostState() },
-                onBack = {}, onAddExercise = {}, onEditParams = {}, onRemove = {},
+                onBack = {}, onAddExercise = {}, onEditParams = {}, onRemove = {}, onReorder = {},
             )
         }
     }
