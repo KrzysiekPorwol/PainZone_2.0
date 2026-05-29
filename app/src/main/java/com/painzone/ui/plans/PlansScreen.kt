@@ -154,9 +154,18 @@ private fun ContentBody(
     }
 }
 
-// Polish day count: "1 dzień" vs "N dni" (covers 0, 2, 5, 22 — all "dni").
-private fun dayCountLabel(count: Int): String =
-    if (count == 1) "1 dzień" else "$count dni"
+// Polish declension for "N training days per week":
+// 1 → "dzień treningowy", 2-4 → "dni treningowe", 5+ → "dni treningowych".
+private fun dayCountLabel(count: Int): String {
+    val mod10 = count % 10
+    val mod100 = count % 100
+    val noun = when {
+        count == 1 -> "dzień treningowy"
+        mod10 in 2..4 && mod100 !in 12..14 -> "dni treningowe"
+        else -> "dni treningowych"
+    }
+    return "$count $noun w skali tygodnia"
+}
 
 private val previewPlans = listOf(
     PlanSummary(id = 1L, name = "Push/Pull/Legs", isActive = true, dayCount = 3),

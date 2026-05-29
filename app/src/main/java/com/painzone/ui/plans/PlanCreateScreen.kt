@@ -2,28 +2,27 @@ package com.painzone.ui.plans
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -33,12 +32,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,7 +57,6 @@ fun PlanCreateScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showDiscardDialog by remember { mutableStateOf(false) }
-    var showAddDayDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.savedEvents.collect { onSaved() }
@@ -69,23 +71,14 @@ fun PlanCreateScreen(
     PlanCreateContent(
         state = state,
         onNameChange = viewModel::onNameChange,
-        onAddDayClick = { showAddDayDialog = true },
-        onRemoveDay = viewModel::removeDay,
+        onIncrementDays = viewModel::incrementDays,
+        onDecrementDays = viewModel::decrementDays,
+        onDayNameChange = viewModel::onDayNameChange,
         onSave = viewModel::save,
         onBack = attemptBack,
         modifier = modifier,
     )
 
-    if (showAddDayDialog) {
-        AddDayDialog(
-            existingDays = state.days,
-            onConfirm = { name ->
-                viewModel.addDay(name)
-                showAddDayDialog = false
-            },
-            onDismiss = { showAddDayDialog = false },
-        )
-    }
     if (showDiscardDialog) {
         AlertDialog(
             onDismissRequest = { showDiscardDialog = false },
@@ -112,14 +105,21 @@ fun PlanCreateScreen(
 private fun PlanCreateContent(
     state: PlanCreateUiState,
     onNameChange: (String) -> Unit,
-    onAddDayClick: () -> Unit,
-    onRemoveDay: (Int) -> Unit,
+    onIncrementDays: () -> Unit,
+    onDecrementDays: () -> Unit,
+    onDayNameChange: (Int, String) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    // A session field shows its "blank" error only after the user has focused and left it —
+    // so a fresh plan with empty fields doesn't greet the user with red underlines.
+    val everFocused = remember { mutableStateMapOf<Int, Boolean>() }
+    val touched = remember { mutableStateMapOf<Int, Boolean>() }
+    val anyBlankTouched = state.days.withIndex().any { (i, name) -> name.isBlank() && touched[i] == true }
 
     Scaffold(
         modifier = modifier,
@@ -165,109 +165,114 @@ private fun PlanCreateContent(
                     .focusRequester(focusRequester),
             )
 
-            Text(
-                text = "Ilość sesji treningowych w skali tygodnia",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            DayCountStepper(
+                count = state.days.size,
+                onMinus = onDecrementDays,
+                onPlus = onIncrementDays,
+                minusEnabled = state.days.size > PlanCreateUiState.MIN_DAY_COUNT,
+                plusEnabled = state.days.size < PlanCreateUiState.MAX_DAY_COUNT,
             )
 
-            if (state.days.isEmpty()) {
-                Text(
-                    text = "Brak sesji. Dodaj pierwszą sesję przyciskiem poniżej.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                )
-            } else {
-                state.days.forEachIndexed { index, dayName ->
-                    ListItem(
-                        headlineContent = { Text(dayName) },
-                        trailingContent = {
-                            IconButton(onClick = { onRemoveDay(index) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "Usuń sesję $dayName",
-                                )
+            state.days.forEachIndexed { index, dayName ->
+                OutlinedTextField(
+                    value = dayName,
+                    onValueChange = { onDayNameChange(index, it) },
+                    label = { Text("Sesja ${index + 1}") },
+                    placeholder = { Text("np. Push / Nogi / FBW") },
+                    singleLine = true,
+                    isError = dayName.isBlank() && touched[index] == true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 6.dp)
+                        .onFocusChanged { focus ->
+                            if (focus.isFocused) {
+                                everFocused[index] = true
+                            } else if (everFocused[index] == true) {
+                                touched[index] = true
                             }
                         },
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
+                )
             }
 
-            OutlinedButton(
-                onClick = onAddDayClick,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+            // Blank error only surfaces after a field was touched; duplicates show immediately
+            // because they only arise once the user has typed conflicting names.
+            val daysError = when {
+                state.hasDuplicateDay -> "Nazwy sesji muszą być unikalne"
+                anyBlankTouched -> "Nazwy sesji nie mogą być puste"
+                else -> null
+            }
+            daysError?.let { error ->
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+                )
+            }
+
+            // Backup save action — mirrors the ✓ in the top bar for users who scroll past it.
+            Button(
+                onClick = onSave,
+                enabled = state.canSave,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null)
-                Text("Sesja", modifier = Modifier.padding(start = 8.dp))
+                Text("Zapisz plan")
             }
         }
     }
 }
 
 @Composable
-private fun AddDayDialog(
-    existingDays: List<String>,
-    onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit,
+private fun DayCountStepper(
+    count: Int,
+    onMinus: () -> Unit,
+    onPlus: () -> Unit,
+    minusEnabled: Boolean,
+    plusEnabled: Boolean,
 ) {
-    var name by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nowa sesja") },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = {
-                    name = it
-                    if (error != null) error = null
-                },
-                label = { Text("Nazwa sesji (np. Push/Klata+biceps)") },
-                singleLine = true,
-                isError = error != null,
-                supportingText = error?.let { { Text(it) } },
-                modifier = Modifier.focusRequester(focusRequester),
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val trimmed = name.trim()
-                    // Uniqueness is checked case-insensitively for friendlier UX;
-                    // the plan is not persisted yet, so this is the only guard.
-                    if (existingDays.any { it.equals(trimmed, ignoreCase = true) }) {
-                        error = "Sesja o tej nazwie już istnieje"
-                    } else {
-                        onConfirm(trimmed)
-                    }
-                },
-                enabled = name.trim().isNotEmpty(),
-            ) {
-                Text("Dodaj")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Anuluj") }
-        },
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "Liczba dni treningowych\nw skali tygodnia",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp),
+        )
+        FilledTonalIconButton(onClick = onMinus, enabled = minusEnabled) {
+            Icon(Icons.Filled.Remove, contentDescription = "Mniej sesji")
+        }
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .widthIn(min = 48.dp),
+        )
+        FilledTonalIconButton(onClick = onPlus, enabled = plusEnabled) {
+            Icon(Icons.Filled.Add, contentDescription = "Więcej sesji")
+        }
+    }
 }
 
-@Preview(showBackground = true, name = "Empty")
+@Preview(showBackground = true, name = "Default (3 sesje)")
 @Composable
-private fun PlanCreateEmptyPreview() {
+private fun PlanCreateDefaultPreview() {
     PainZoneTheme {
         Surface {
             PlanCreateContent(
                 state = PlanCreateUiState(),
                 onNameChange = {},
-                onAddDayClick = {},
-                onRemoveDay = {},
+                onIncrementDays = {},
+                onDecrementDays = {},
+                onDayNameChange = { _, _ -> },
                 onSave = {},
                 onBack = {},
             )
@@ -286,8 +291,9 @@ private fun PlanCreateContentPreview() {
                     days = listOf("Push", "Pull", "Legs"),
                 ),
                 onNameChange = {},
-                onAddDayClick = {},
-                onRemoveDay = {},
+                onIncrementDays = {},
+                onDecrementDays = {},
+                onDayNameChange = { _, _ -> },
                 onSave = {},
                 onBack = {},
             )
@@ -303,12 +309,13 @@ private fun PlanCreateErrorPreview() {
             PlanCreateContent(
                 state = PlanCreateUiState(
                     name = "Push/Pull/Legs",
-                    days = listOf("Push", "Pull"),
+                    days = listOf("Push", "Push"),
                     nameError = "Plan o tej nazwie już istnieje",
                 ),
                 onNameChange = {},
-                onAddDayClick = {},
-                onRemoveDay = {},
+                onIncrementDays = {},
+                onDecrementDays = {},
+                onDayNameChange = { _, _ -> },
                 onSave = {},
                 onBack = {},
             )

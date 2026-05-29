@@ -31,15 +31,25 @@ class PlanCreateViewModel @Inject constructor(
         _uiState.update { it.copy(name = value, nameError = null) }
     }
 
-    // Day-name validation (non-blank, unique) lives in the add-day dialog —
-    // here we just append the trimmed name; list index becomes the persisted order.
-    fun addDay(name: String) {
-        _uiState.update { it.copy(days = it.days + name.trim()) }
+    // Session count is stepper-driven (1..7). Grow appends a blank session;
+    // shrink drops the last session. List index becomes the persisted order.
+    fun incrementDays() {
+        _uiState.update { state ->
+            if (state.days.size >= PlanCreateUiState.MAX_DAY_COUNT) return@update state
+            state.copy(days = state.days + "")
+        }
     }
 
-    fun removeDay(index: Int) {
+    fun decrementDays() {
         _uiState.update { state ->
-            state.copy(days = state.days.filterIndexed { i, _ -> i != index })
+            if (state.days.size <= PlanCreateUiState.MIN_DAY_COUNT) return@update state
+            state.copy(days = state.days.dropLast(1))
+        }
+    }
+
+    fun onDayNameChange(index: Int, value: String) {
+        _uiState.update { state ->
+            state.copy(days = state.days.mapIndexed { i, name -> if (i == index) value else name })
         }
     }
 
@@ -51,7 +61,7 @@ class PlanCreateViewModel @Inject constructor(
             when (val result = repository.create(state.name)) {
                 is CreatePlanResult.Success -> {
                     // Days were validated unique locally — addDay won't hit DuplicateName/PlanNotFound.
-                    state.days.forEach { dayName -> repository.addDay(result.id, dayName) }
+                    state.days.forEach { dayName -> repository.addDay(result.id, dayName.trim()) }
                     _savedEvents.emit(Unit)
                 }
                 CreatePlanResult.DuplicateName -> {

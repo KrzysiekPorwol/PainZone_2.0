@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,7 +40,8 @@ import com.painzone.ui.theme.PainZoneTheme
 import kotlinx.coroutines.launch
 
 private const val DEFAULT_REPS = 10
-private const val REST_STEP_SECONDS = 30
+private const val REST_STEP_SECONDS = 15
+private const val STEP_COUNT = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +57,7 @@ fun ExerciseParamsSheet(
     // toMutableStateList so per-set edits recompose without rebuilding the list each time.
     val reps = remember { initialTargetReps.toMutableStateList() }
     var rest by remember { mutableStateOf(initialRestSeconds) }
+    var step by remember { mutableIntStateOf(0) }
     var saving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -76,59 +79,112 @@ fun ExerciseParamsSheet(
                 )
             }
 
-            // Sets count drives the reps list size: grow appends a fresh set, shrink drops the last.
-            StepperRow(
-                label = "Serie",
-                value = reps.size.toString(),
-                onMinus = { if (reps.size > 1) reps.removeAt(reps.size - 1) },
-                minusEnabled = reps.size > 1,
-                onPlus = { reps.add(reps.lastOrNull() ?: DEFAULT_REPS) },
+            Text(
+                text = "Krok ${step + 1}/$STEP_COUNT — ${stepTitle(step)}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            reps.forEachIndexed { index, value ->
-                StepperRow(
-                    label = "Seria ${index + 1}",
-                    value = value.toString(),
-                    onMinus = { if (value > 1) reps[index] = value - 1 },
-                    minusEnabled = value > 1,
-                    onPlus = { reps[index] = value + 1 },
-                )
+            when (step) {
+                0 -> StepSets(reps)
+                1 -> StepReps(reps)
+                else -> StepRest(rest = rest, onRestChange = { rest = it })
             }
 
-            StepperRow(
-                label = "Odpoczynek",
-                value = formatRest(rest),
-                // Step down from 0:30 lands on "—" (null = no rest target).
-                onMinus = {
-                    rest = when {
-                        rest == null -> null
-                        rest!! <= REST_STEP_SECONDS -> null
-                        else -> rest!! - REST_STEP_SECONDS
+            WizardFooter(
+                step = step,
+                saving = saving,
+                onBack = { if (step == 0) onDismiss() else step-- },
+                onNext = { step++ },
+                onSave = {
+                    saving = true
+                    scope.launch {
+                        onSave(reps.toList(), rest)
+                        onDismiss()
                     }
                 },
-                minusEnabled = rest != null,
-                onPlus = { rest = (rest ?: 0) + REST_STEP_SECONDS },
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onDismiss, enabled = !saving) { Text("Anuluj") }
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        saving = true
-                        scope.launch {
-                            onSave(reps.toList(), rest)
-                            onDismiss()
-                        }
-                    },
-                    enabled = !saving,
-                ) { Text("Zapisz") }
-            }
         }
     }
+}
+
+// Step 1: sets count drives the reps list size — grow appends a fresh set, shrink drops the last.
+@Composable
+private fun StepSets(reps: androidx.compose.runtime.snapshots.SnapshotStateList<Int>) {
+    StepperRow(
+        label = "Serie",
+        value = reps.size.toString(),
+        onMinus = { if (reps.size > 1) reps.removeAt(reps.size - 1) },
+        minusEnabled = reps.size > 1,
+        onPlus = { reps.add(reps.lastOrNull() ?: DEFAULT_REPS) },
+    )
+}
+
+// Step 2: per-set reps, all sets shown at once.
+@Composable
+private fun StepReps(reps: androidx.compose.runtime.snapshots.SnapshotStateList<Int>) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        reps.forEachIndexed { index, value ->
+            StepperRow(
+                label = "Seria ${index + 1}",
+                value = value.toString(),
+                onMinus = { if (value > 1) reps[index] = value - 1 },
+                minusEnabled = value > 1,
+                onPlus = { reps[index] = value + 1 },
+            )
+        }
+    }
+}
+
+// Step 3: rest between sets, 15s steps. Stepping down from 0:15 lands on "—" (null = no target).
+@Composable
+private fun StepRest(rest: Int?, onRestChange: (Int?) -> Unit) {
+    StepperRow(
+        label = "Odpoczynek",
+        value = formatRest(rest),
+        onMinus = {
+            onRestChange(
+                when {
+                    rest == null -> null
+                    rest <= REST_STEP_SECONDS -> null
+                    else -> rest - REST_STEP_SECONDS
+                },
+            )
+        },
+        minusEnabled = rest != null,
+        onPlus = { onRestChange((rest ?: 0) + REST_STEP_SECONDS) },
+    )
+}
+
+@Composable
+private fun WizardFooter(
+    step: Int,
+    saving: Boolean,
+    onBack: () -> Unit,
+    onNext: () -> Unit,
+    onSave: () -> Unit,
+) {
+    val isLast = step == STEP_COUNT - 1
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(onClick = onBack, enabled = !saving) {
+            Text(if (step == 0) "Anuluj" else "Wstecz")
+        }
+        Spacer(Modifier.width(8.dp))
+        if (isLast) {
+            Button(onClick = onSave, enabled = !saving) { Text("Zapisz") }
+        } else {
+            Button(onClick = onNext, enabled = !saving) { Text("Dalej") }
+        }
+    }
+}
+
+private fun stepTitle(step: Int): String = when (step) {
+    0 -> "ilość serii"
+    1 -> "ilość powtórzeń"
+    else -> "czas odpoczynku między seriami"
 }
 
 @Composable
@@ -173,25 +229,60 @@ internal fun formatRest(seconds: Int?): String {
     return "%d:%02d".format(mins, secs)
 }
 
-@Preview(showBackground = true, name = "Params form")
+@Preview(showBackground = true, name = "Krok 1 — Serie")
 @Composable
-private fun ExerciseParamsPreview() {
-    // Sheet itself can't render in @Preview; mirror its body for visual coverage.
+private fun StepSetsPreview() {
     PainZoneTheme {
         Surface {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text("Wyciskanie sztangi", style = MaterialTheme.typography.titleLarge)
+            WizardBodyPreview(step = 0) {
                 StepperRow("Serie", "3", {}, true, {})
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Krok 2 — Powtórzenia")
+@Composable
+private fun StepRepsPreview() {
+    PainZoneTheme {
+        Surface {
+            WizardBodyPreview(step = 1) {
                 StepperRow("Seria 1", "10", {}, true, {})
                 StepperRow("Seria 2", "9", {}, true, {})
                 StepperRow("Seria 3", "8", {}, true, {})
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Krok 3 — Odpoczynek")
+@Composable
+private fun StepRestPreview() {
+    PainZoneTheme {
+        Surface {
+            WizardBodyPreview(step = 2) {
                 StepperRow("Odpoczynek", formatRest(90), {}, true, {})
             }
         }
+    }
+}
+
+// Sheet itself can't render in @Preview; mirror header + body + footer for visual coverage.
+@Composable
+private fun WizardBodyPreview(step: Int, body: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Text("Wyciskanie sztangi", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "Krok ${step + 1}/$STEP_COUNT — ${stepTitle(step)}",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        body()
+        WizardFooter(step = step, saving = false, onBack = {}, onNext = {}, onSave = {})
     }
 }
