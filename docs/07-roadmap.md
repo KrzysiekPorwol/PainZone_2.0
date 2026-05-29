@@ -41,7 +41,7 @@ Plany treningowe — dni × ćwiczenia z parametrami, ≤1 aktywny.
 
 ### M3 · Session (US-3, US-4, US-5)
 Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
-- **M3.1 · WorkoutSession + LoggedSet encje** — snapshot pattern (ADR-0003) + invarianty (`05-domain-session.md`) + unit testy.
+- (zrobione) **M3.1 · WorkoutSession + LoggedSet encje** — `WorkoutSession`/`SessionExerciseSnapshot`/`LoggedSet` pure Kotlin (domain/session/) + invarianty (snapshot names trimmed/non-blank, `finishedAt>=startedAt`, `order>=0`/`>=1`, `reps>=1`, `weight>=0`, `plannedTargetReps` non-empty+`>=1`) + unit testy. `finish()` idempotentny (guard stanu → repo M3.10). „≤1 in-progress globalnie" + tworzenie snapshotów odłożone do `SessionRepository` (M3.3).
 - **M3.2 · Session Room layer** — `SessionEntity` + `LoggedSetEntity` + DAO + migration v3.
 - **M3.3 · SessionRepository** — start z planu z pre-fill (cel z planu, ciężar z ostatniej sesji), pauza/wznowienie.
 - **M3.4 · SessionScreen szkielet** — lista ćwiczeń z planu, aktywne ćwiczenie, nav między ćwiczeniami.
