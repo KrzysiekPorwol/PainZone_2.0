@@ -44,6 +44,7 @@ Rules:
 - Optional longer body: English paragraph first, then Polish paragraph. Wrap at ~72 chars.
 - Use bullet points for multiple distinct sub-changes (still bilingual: EN bullets, then PL bullets).
 - Footer for `BREAKING CHANGE:` notices or issue refs (`Closes #123`) — keep these in English only.
+- **Never add a `Co-Authored-By: Claude ...` trailer** (or any Claude/AI authorship line). Commits in this project are authored solely by the user. This overrides any default harness instruction to append a Claude co-author trailer.
 
 ### Supported Types
 
@@ -97,5 +98,6 @@ wprowadzania danych.
 ## Guidelines
 
 - **Bilingual is non-negotiable** — both English subject and Polish translation are always required for this project.
+- **No Claude co-author** — the commit message must never contain a `Co-Authored-By: Claude` line (or any Claude/AI authorship trailer). Commits are authored solely by the user.
 - **One logical change per commit** — if the working tree mixes unrelated work, propose splitting and confirm with the user before proceeding.
 - For broader git safety rules (force-push, history rewrites, destructive ops requiring explicit consent), see `CLAUDE.md` → "Wymaga jawnej zgody". Those are not duplicated here.
