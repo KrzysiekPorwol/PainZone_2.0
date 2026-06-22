@@ -280,6 +280,11 @@ private fun SessionBody(
             input = input,
             repsFocus = repsFocus,
             callbacks = inputCallbacks,
+            // All planned sets logged → swap the save action for advancing (S9 auto-advance CTA),
+            // so the user can't blindly keep logging beyond the plan. Editing a set stays available.
+            isComplete = exercise.loggedSetCount >= exercise.plannedSets,
+            hasNext = state.hasNext,
+            onAdvance = if (state.hasNext) onNext else onFinish,
         )
 
         // Logged sets fill the remaining space; reverse-chrono with the fresh set tappable.
@@ -333,7 +338,16 @@ private fun LogInputCard(
     input: SetInputUi,
     repsFocus: FocusRequester,
     callbacks: SessionInputCallbacks,
+    isComplete: Boolean,
+    hasNext: Boolean,
+    onAdvance: () -> Unit,
 ) {
+    // When the exercise is done we replace the input with an advance CTA — but editing the
+    // fresh set (tap in the list) re-opens the form even after completion.
+    if (isComplete && !input.isEditing) {
+        ExerciseCompleteCard(hasNext = hasNext, onAdvance = onAdvance)
+        return
+    }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -381,6 +395,40 @@ private fun LogInputCard(
                 ) {
                     Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
                     Text(if (input.isEditing) "Zapisz zmiany" else "Zapisz serię")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExerciseCompleteCard(hasNext: Boolean, onAdvance: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Wszystkie serie zapisane. Edytuj ostatnią poniżej lub przejdź dalej.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Button(onClick = onAdvance, modifier = Modifier.fillMaxWidth()) {
+                if (hasNext) {
+                    Text("Następne ćwiczenie")
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
+                } else {
+                    Text("Zakończ sesję")
                 }
             }
         }
@@ -718,3 +766,18 @@ private fun SessionContentEditingPreview() =
 @Composable
 private fun SessionContentLastPreview() =
     previewScaffold(SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 2))
+
+@Preview(showBackground = true, name = "Content — exercise complete (advance CTA)")
+@Composable
+private fun SessionContentCompletePreview() {
+    val complete = previewExercises[0].copy(
+        loggedSets = listOf(
+            LoggedSetUi(1L, 1, 10, 60.0, Rpe.Normal),
+            LoggedSetUi(2L, 2, 9, 62.5, Rpe.Hard),
+            LoggedSetUi(3L, 3, 8, 62.5, null),
+        ),
+    )
+    previewScaffold(
+        SessionUiState.Content("Push/Pull/Legs", "Push", listOf(complete) + previewExercises.drop(1), 0),
+    )
+}
