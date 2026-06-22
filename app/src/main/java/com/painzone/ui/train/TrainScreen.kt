@@ -12,10 +12,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -30,14 +34,26 @@ import com.painzone.ui.theme.PainZoneTheme
 fun TrainScreen(
     onManageLibrary: () -> Unit,
     onGoToPlans: () -> Unit,
+    onOpenSession: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TrainViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.openSession.collect { onOpenSession(it) }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { snackbarHostState.showSnackbar(it) }
+    }
+
     TrainScaffold(
         state = state,
+        snackbarHostState = snackbarHostState,
         onManageLibrary = onManageLibrary,
         onGoToPlans = onGoToPlans,
+        onStart = viewModel::onStartClick,
         modifier = modifier,
     )
 }
@@ -45,18 +61,21 @@ fun TrainScreen(
 @Composable
 private fun TrainScaffold(
     state: TrainUiState,
+    snackbarHostState: SnackbarHostState,
     onManageLibrary: () -> Unit,
     onGoToPlans: () -> Unit,
+    onStart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         topBar = { TopLevelTopBar(title = "Trenuj", onManageLibrary = onManageLibrary) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         when (state) {
             TrainUiState.Loading -> LoadingBody(innerPadding)
             TrainUiState.NoActivePlan -> NoActivePlanBody(innerPadding, onGoToPlans)
-            is TrainUiState.ActivePlan -> ActivePlanBody(state.planName, innerPadding)
+            is TrainUiState.ActivePlan -> ActivePlanBody(state, innerPadding, onStart)
         }
     }
 }
@@ -103,7 +122,12 @@ private fun NoActivePlanBody(innerPadding: PaddingValues, onGoToPlans: () -> Uni
 }
 
 @Composable
-private fun ActivePlanBody(planName: String, innerPadding: PaddingValues) {
+private fun ActivePlanBody(
+    state: TrainUiState.ActivePlan,
+    innerPadding: PaddingValues,
+    onStart: () -> Unit,
+) {
+    val resuming = state.inProgressSessionId != null
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -122,10 +146,21 @@ private fun ActivePlanBody(planName: String, innerPadding: PaddingValues) {
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text(text = planName, style = MaterialTheme.typography.titleLarge)
-                // "Zacznij" is a placeholder until sessions land in M3.
-                Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
-                    Text("Zacznij")
+                Text(text = state.planName, style = MaterialTheme.typography.titleLarge)
+                state.startableDay?.let {
+                    Text(
+                        text = if (resuming) "Sesja w toku" else "Start: ${it.dayName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Button(
+                    onClick = onStart,
+                    // No day means nothing to start; resume stays available regardless.
+                    enabled = resuming || state.startableDay != null,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (resuming) "Wznów sesję" else "Zacznij")
                 }
             }
         }
@@ -135,17 +170,45 @@ private fun ActivePlanBody(planName: String, innerPadding: PaddingValues) {
 @Preview(showBackground = true, name = "Loading")
 @Composable
 private fun TrainLoadingPreview() {
-    PainZoneTheme { Surface { TrainScaffold(TrainUiState.Loading, {}, {}) } }
+    PainZoneTheme {
+        Surface {
+            TrainScaffold(TrainUiState.Loading, remember { SnackbarHostState() }, {}, {}, {})
+        }
+    }
 }
 
 @Preview(showBackground = true, name = "No active plan")
 @Composable
 private fun TrainNoActivePlanPreview() {
-    PainZoneTheme { Surface { TrainScaffold(TrainUiState.NoActivePlan, {}, {}) } }
+    PainZoneTheme {
+        Surface {
+            TrainScaffold(TrainUiState.NoActivePlan, remember { SnackbarHostState() }, {}, {}, {})
+        }
+    }
 }
 
-@Preview(showBackground = true, name = "Active plan")
+@Preview(showBackground = true, name = "Active plan — start")
 @Composable
 private fun TrainActivePlanPreview() {
-    PainZoneTheme { Surface { TrainScaffold(TrainUiState.ActivePlan("Push/Pull/Legs"), {}, {}) } }
+    PainZoneTheme {
+        Surface {
+            TrainScaffold(
+                TrainUiState.ActivePlan("Push/Pull/Legs", StartableDay(1L, "Push"), null),
+                remember { SnackbarHostState() }, {}, {}, {},
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Active plan — resume")
+@Composable
+private fun TrainActivePlanResumePreview() {
+    PainZoneTheme {
+        Surface {
+            TrainScaffold(
+                TrainUiState.ActivePlan("Push/Pull/Legs", StartableDay(1L, "Push"), 42L),
+                remember { SnackbarHostState() }, {}, {}, {},
+            )
+        }
+    }
 }

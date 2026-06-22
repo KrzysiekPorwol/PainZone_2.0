@@ -29,3 +29,7 @@ data class DayDetail(val dayId: Long, val dayName: String) : Route
 
 @Serializable
 data class ExercisePicker(val dayId: Long) : Route
+
+// S9 — active workout session. Focus mode: bottom bar hidden while on this route.
+@Serializable
+data class Session(val sessionId: Long) : Route

@@ -14,6 +14,7 @@ import com.painzone.ui.plans.detail.DayDetailScreen
 import com.painzone.ui.plans.detail.ExercisePickerScreen
 import com.painzone.ui.plans.detail.PlanDetailScreen
 import com.painzone.ui.progress.ProgressScreen
+import com.painzone.ui.session.SessionScreen
 import com.painzone.ui.train.TrainScreen
 
 @Composable
@@ -36,7 +37,11 @@ fun PainZoneNavHost(
         modifier = modifier,
     ) {
         composable<Train> {
-            TrainScreen(onManageLibrary = onManageLibrary, onGoToPlans = onGoToPlans)
+            TrainScreen(
+                onManageLibrary = onManageLibrary,
+                onGoToPlans = onGoToPlans,
+                onOpenSession = { sessionId -> navController.navigate(Session(sessionId)) },
+            )
         }
         composable<Plans> {
             PlansScreen(
@@ -74,6 +79,9 @@ fun PainZoneNavHost(
                 onBack = { navController.popBackStack() },
                 onExerciseAdded = { navController.popBackStack() },
             )
+        }
+        composable<Session> {
+            SessionScreen(onExit = { navController.popBackStack() })
         }
     }
 }
