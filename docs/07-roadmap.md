@@ -42,7 +42,7 @@ Plany treningowe — dni × ćwiczenia z parametrami, ≤1 aktywny.
 ### M3 · Session (US-3, US-4, US-5)
 Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
 - (zrobione) **M3.1 · WorkoutSession + LoggedSet encje** — `WorkoutSession`/`SessionExerciseSnapshot`/`LoggedSet` pure Kotlin (domain/session/) + invarianty (snapshot names trimmed/non-blank, `finishedAt>=startedAt`, `order>=0`/`>=1`, `reps>=1`, `weight>=0`, `plannedTargetReps` non-empty+`>=1`) + unit testy. `finish()` idempotentny (guard stanu → repo M3.10). „≤1 in-progress globalnie" + tworzenie snapshotów odłożone do `SessionRepository` (M3.3).
-- **M3.2 · Session Room layer** — `SessionEntity` + `LoggedSetEntity` + DAO + migration v3.
+- (zrobione) **M3.2 · Session Room layer** — `WorkoutSessionEntity` (FK→day `ON DELETE SET NULL`) + `SessionExerciseSnapshotEntity` (FK→session CASCADE, FK→exercise NO ACTION) + `LoggedSetEntity` (FK→snapshot CASCADE) + mappery + 3 DAO + 2 relation POJO (`SessionWithSnapshots`/`SnapshotWithLoggedSets`) + `MIGRATION_2_3` (schema v3). `insertAll` snapshotów pod `start()`, `resequence` setów po delete. Derived queries (Last Set Preview, smart suggestion) odłożone do M3.3/M4.
 - **M3.3 · SessionRepository** — start z planu z pre-fill (cel z planu, ciężar z ostatniej sesji), pauza/wznowienie.
 - **M3.4 · SessionScreen szkielet** — lista ćwiczeń z planu, aktywne ćwiczenie, nav między ćwiczeniami.
 - **M3.5 · Log seria UX** — input reps × ciężar × RPE chips, save ≤3s (PRD A2), auto-fokus, edycja świeżej serii nadpisuje.

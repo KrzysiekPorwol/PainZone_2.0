@@ -3,11 +3,15 @@ package com.painzone.data.di
 import android.content.Context
 import androidx.room.Room
 import com.painzone.data.db.MIGRATION_1_2
+import com.painzone.data.db.MIGRATION_2_3
 import com.painzone.data.db.PainZoneDatabase
 import com.painzone.data.exercise.ExerciseDao
 import com.painzone.data.plan.PlannedDayDao
 import com.painzone.data.plan.PlannedExerciseDao
 import com.painzone.data.plan.TrainingPlanDao
+import com.painzone.data.session.LoggedSetDao
+import com.painzone.data.session.SessionExerciseSnapshotDao
+import com.painzone.data.session.WorkoutSessionDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,7 +30,7 @@ object DatabaseModule {
             PainZoneDatabase::class.java,
             "pz_db",
         )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides
@@ -40,4 +44,14 @@ object DatabaseModule {
 
     @Provides
     fun providePlannedExerciseDao(db: PainZoneDatabase): PlannedExerciseDao = db.plannedExerciseDao()
+
+    @Provides
+    fun provideWorkoutSessionDao(db: PainZoneDatabase): WorkoutSessionDao = db.workoutSessionDao()
+
+    @Provides
+    fun provideSessionExerciseSnapshotDao(db: PainZoneDatabase): SessionExerciseSnapshotDao =
+        db.sessionExerciseSnapshotDao()
+
+    @Provides
+    fun provideLoggedSetDao(db: PainZoneDatabase): LoggedSetDao = db.loggedSetDao()
 }
