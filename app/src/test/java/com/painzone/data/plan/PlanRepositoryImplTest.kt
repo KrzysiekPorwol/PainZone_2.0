@@ -471,6 +471,9 @@ private class FakePlannedExerciseDao : PlannedExerciseDao {
     override fun observeByDayId(dayId: Long): Flow<List<PlannedExerciseEntity>> =
         flow.map { list -> list.filter { it.plannedDayId == dayId }.sortedBy { it.order } }
 
+    override suspend fun getByDayId(dayId: Long): List<PlannedExerciseEntity> =
+        store.values.filter { it.plannedDayId == dayId }.sortedBy { it.order }
+
     override suspend fun maxOrderInDay(dayId: Long): Int? =
         store.values.filter { it.plannedDayId == dayId }.maxOfOrNull { it.order }
 

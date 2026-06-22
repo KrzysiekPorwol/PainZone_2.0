@@ -31,6 +31,19 @@ interface LoggedSetDao {
     @Query("SELECT MAX(order_in_exercise) FROM logged_set WHERE session_exercise_snapshot_id = :snapshotId")
     suspend fun maxOrderInSnapshot(snapshotId: Long): Int?
 
+    // Pre-fill source: weight of the most recently logged set of this exercise across
+    // all sessions (joined via snapshot.exercise_id). Null when the exercise has no history.
+    @Query(
+        """
+        SELECT ls.weight FROM logged_set ls
+        JOIN session_exercise_snapshot s ON ls.session_exercise_snapshot_id = s.id
+        WHERE s.exercise_id = :exerciseId
+        ORDER BY ls.completed_at DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun lastWeightForExercise(exerciseId: Long): Double?
+
     @Query("UPDATE logged_set SET order_in_exercise = :order WHERE id = :id")
     suspend fun updateOrder(id: Long, order: Int)
 

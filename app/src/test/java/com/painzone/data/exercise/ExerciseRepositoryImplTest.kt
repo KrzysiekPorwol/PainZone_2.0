@@ -215,6 +215,7 @@ private class StubPlannedExerciseDao : PlannedExerciseDao {
     override suspend fun deleteById(id: Long) = Unit
     override suspend fun getById(id: Long): PlannedExerciseEntity? = null
     override fun observeByDayId(dayId: Long): Flow<List<PlannedExerciseEntity>> = flowOf(emptyList())
+    override suspend fun getByDayId(dayId: Long): List<PlannedExerciseEntity> = emptyList()
     override suspend fun maxOrderInDay(dayId: Long): Int? = null
     override suspend fun updateOrder(id: Long, order: Int) = Unit
     override suspend fun countDistinctPlansForExercise(exerciseId: Long): Int =

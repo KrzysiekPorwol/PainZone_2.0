@@ -25,6 +25,10 @@ interface PlannedExerciseDao {
     @Query("SELECT * FROM planned_exercise WHERE planned_day_id = :dayId ORDER BY order_in_day")
     fun observeByDayId(dayId: Long): Flow<List<PlannedExerciseEntity>>
 
+    // One-shot read for session start (snapshot creation), where a Flow is not needed.
+    @Query("SELECT * FROM planned_exercise WHERE planned_day_id = :dayId ORDER BY order_in_day")
+    suspend fun getByDayId(dayId: Long): List<PlannedExerciseEntity>
+
     @Query("SELECT MAX(order_in_day) FROM planned_exercise WHERE planned_day_id = :dayId")
     suspend fun maxOrderInDay(dayId: Long): Int?
 
