@@ -33,6 +33,8 @@ data class SessionExerciseUi(
     val plannedTargetReps: List<Int>,
     val plannedRestSeconds: Int?,
     val loggedSets: List<LoggedSetUi>,
+    // Last Set Preview — last set of this exercise from a prior session; null = no history.
+    val lastSet: LastSetPreviewUi? = null,
 ) {
     val plannedSets: Int get() = plannedTargetReps.size
     val loggedSetCount: Int get() = loggedSets.size
@@ -60,6 +62,34 @@ data class SetInputUi(
     val canSave: Boolean get() = (reps.toIntOrNull() ?: 0) >= 1 && (weight.toDoubleOrNull() ?: 0.0) >= 0.0
 }
 
+// Last Set Preview line state (S9). daysAgo = calendar days between the set and today.
+data class LastSetPreviewUi(
+    val reps: Int,
+    val weight: Double,
+    val rpe: Rpe?,
+    val daysAgo: Int,
+)
+
 // Drops a trailing ".0" so whole weights read "60" while half-steps stay "62.5".
 fun formatWeight(value: Double): String =
     if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
+
+val Rpe.labelPl: String
+    get() = when (this) {
+        Rpe.Easy -> "Łatwa"
+        Rpe.Normal -> "Normalna"
+        Rpe.Hard -> "Ciężka"
+    }
+
+// "dziś" / "wczoraj" / "N dni temu" — Polish reads more naturally than a bare "0 dni temu".
+fun daysAgoLabel(days: Int): String = when {
+    days <= 0 -> "dziś"
+    days == 1 -> "wczoraj"
+    else -> "$days dni temu"
+}
+
+// "reps × kg / RPE — N dni temu"; RPE suffix dropped when not recorded (wireframe S9).
+fun lastSetPreviewLine(preview: LastSetPreviewUi): String {
+    val rpeSuffix = preview.rpe?.let { " / ${it.labelPl}" }.orEmpty()
+    return "${preview.reps} × ${formatWeight(preview.weight)} kg$rpeSuffix — ${daysAgoLabel(preview.daysAgo)}"
+}

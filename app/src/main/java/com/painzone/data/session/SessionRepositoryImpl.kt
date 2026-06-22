@@ -9,6 +9,7 @@ import com.painzone.domain.session.SessionDetail
 import com.painzone.domain.session.SessionExerciseDetail
 import com.painzone.domain.session.SessionExerciseSnapshot
 import com.painzone.domain.session.FinishSessionResult
+import com.painzone.domain.session.LastSetPreview
 import com.painzone.domain.session.LoggedSet
 import com.painzone.domain.session.Rpe
 import com.painzone.domain.session.SessionRepository
@@ -91,6 +92,11 @@ class SessionRepositoryImpl @Inject constructor(
 
     override suspend fun lastWeightForExercise(exerciseId: Long): Double? =
         loggedSetDao.lastWeightForExercise(exerciseId)
+
+    override suspend fun lastSetForExercise(exerciseId: Long, excludingSessionId: Long): LastSetPreview? =
+        loggedSetDao.lastSetForExercise(exerciseId, excludingSessionId)?.let {
+            LastSetPreview(reps = it.reps, weight = it.weight, rpe = it.rpe, completedAt = it.completedAt)
+        }
 
     override suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long {
         val order = (loggedSetDao.maxOrderInSnapshot(snapshotId) ?: 0) + 1

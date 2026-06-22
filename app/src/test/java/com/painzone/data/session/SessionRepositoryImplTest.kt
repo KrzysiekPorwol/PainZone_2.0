@@ -192,6 +192,32 @@ class SessionRepositoryImplTest {
 
         assertEquals(110.0, repo.lastWeightForExercise(exId)!!, 0.0)
     }
+
+    @Test
+    fun `lastSetForExercise returns latest prior-session set and ignores the current session`() = runTest {
+        val exId = exerciseDao.seed("Squat", MuscleGroup.Legs)
+        // Prior session (id 1): two sets, the later one should win.
+        val priorSnap = store.seedSnapshot(sessionId = 1L, exerciseId = exId)
+        store.seedSet(priorSnap, order = 1, reps = 5, weight = 100.0, at = Instant.ofEpochSecond(100))
+        store.seedSet(priorSnap, order = 2, reps = 5, weight = 105.0, at = Instant.ofEpochSecond(200))
+        // Current session (id 2): a newer set that must be excluded.
+        val currentSnap = store.seedSnapshot(sessionId = 2L, exerciseId = exId)
+        store.seedSet(currentSnap, order = 1, reps = 8, weight = 120.0, at = Instant.ofEpochSecond(300))
+
+        val preview = repo.lastSetForExercise(exId, excludingSessionId = 2L)!!
+        assertEquals(5, preview.reps)
+        assertEquals(105.0, preview.weight, 0.0)
+        assertEquals(Instant.ofEpochSecond(200), preview.completedAt)
+    }
+
+    @Test
+    fun `lastSetForExercise returns null when only the current session has sets`() = runTest {
+        val exId = exerciseDao.seed("Squat", MuscleGroup.Legs)
+        val currentSnap = store.seedSnapshot(sessionId = 2L, exerciseId = exId)
+        store.seedSet(currentSnap, order = 1, reps = 8, weight = 120.0, at = Instant.ofEpochSecond(300))
+
+        assertNull(repo.lastSetForExercise(exId, excludingSessionId = 2L))
+    }
 }
 
 // Shared in-memory store mimicking the three session tables + reactive bump.
@@ -351,6 +377,16 @@ private class FakeLoggedSetDao(private val store: FakeSessionStore) : LoggedSetD
             .filter { it.sessionExerciseSnapshotId in snapIds }
             .maxByOrNull { it.completedAt }
             ?.weight
+    }
+
+    override suspend fun lastSetForExercise(exerciseId: Long, excludingSessionId: Long): LastSetRow? {
+        val snapIds = store.snapshots.values
+            .filter { it.exerciseId == exerciseId && it.sessionId != excludingSessionId }
+            .map { it.id }
+        return store.sets.values
+            .filter { it.sessionExerciseSnapshotId in snapIds }
+            .maxByOrNull { it.completedAt }
+            ?.let { LastSetRow(it.reps, it.weight, it.rpe, it.completedAt) }
     }
 
     override suspend fun updateOrder(id: Long, order: Int) = throw NotImplementedError()

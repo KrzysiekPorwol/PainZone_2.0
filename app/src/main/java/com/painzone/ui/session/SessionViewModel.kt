@@ -4,10 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.painzone.domain.session.LastSetPreview
 import com.painzone.domain.session.Rpe
 import com.painzone.domain.session.SessionRepository
 import com.painzone.ui.navigation.Session
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +37,16 @@ class SessionViewModel @Inject constructor(
     // jump/advance actions stay consistent with the rendered session graph.
     private val activeIndex = MutableStateFlow(0)
 
+    // exerciseId → Last Set Preview from a prior session. Loaded once (snapshots are immutable,
+    // and the preview excludes the current session so logging here doesn't change it).
+    private val lastSetPreviews = MutableStateFlow<Map<Long, LastSetPreviewUi>>(emptyMap())
+
     val uiState: StateFlow<SessionUiState> =
-        combine(repository.observeSessionDetail(sessionId), activeIndex) { detail, index ->
+        combine(
+            repository.observeSessionDetail(sessionId),
+            activeIndex,
+            lastSetPreviews,
+        ) { detail, index, previews ->
             if (detail == null) {
                 SessionUiState.NotFound
             } else {
@@ -51,6 +63,7 @@ class SessionViewModel @Inject constructor(
                             loggedSets = ex.loggedSets.map { set ->
                                 LoggedSetUi(set.id, set.order, set.reps, set.weight, set.rpe)
                             },
+                            lastSet = previews[ex.snapshot.exerciseId],
                         )
                     }
                 if (exercises.isEmpty()) {
@@ -96,6 +109,31 @@ class SessionViewModel @Inject constructor(
                 }
             }
         }
+        loadLastSetPreviews()
+    }
+
+    // Fetches each exercise's prior-session set once; the session's exercise list is fixed.
+    private fun loadLastSetPreviews() {
+        viewModelScope.launch {
+            val detail = repository.getSessionDetail(sessionId) ?: return@launch
+            val today = LocalDate.now()
+            val previews = detail.exercises
+                .map { it.snapshot.exerciseId }
+                .distinct()
+                .mapNotNull { exerciseId ->
+                    repository.lastSetForExercise(exerciseId, sessionId)?.let { last ->
+                        exerciseId to last.toUi(today)
+                    }
+                }
+                .toMap()
+            lastSetPreviews.value = previews
+        }
+    }
+
+    private fun LastSetPreview.toUi(today: LocalDate): LastSetPreviewUi {
+        val day = completedAt.atZone(ZoneId.systemDefault()).toLocalDate()
+        val daysAgo = ChronoUnit.DAYS.between(day, today).toInt().coerceAtLeast(0)
+        return LastSetPreviewUi(reps = reps, weight = weight, rpe = rpe, daysAgo = daysAgo)
     }
 
     // ---- Input editing ----

@@ -44,6 +44,19 @@ interface LoggedSetDao {
     )
     suspend fun lastWeightForExercise(exerciseId: Long): Double?
 
+    // Last Set Preview source: the chronologically last logged set of this exercise from any
+    // *other* session (excludes the in-progress one). Null when there is no prior history.
+    @Query(
+        """
+        SELECT ls.reps, ls.weight, ls.rpe, ls.completed_at FROM logged_set ls
+        JOIN session_exercise_snapshot s ON ls.session_exercise_snapshot_id = s.id
+        WHERE s.exercise_id = :exerciseId AND s.session_id != :excludingSessionId
+        ORDER BY ls.completed_at DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun lastSetForExercise(exerciseId: Long, excludingSessionId: Long): LastSetRow?
+
     @Query("UPDATE logged_set SET order_in_exercise = :order WHERE id = :id")
     suspend fun updateOrder(id: Long, order: Int)
 

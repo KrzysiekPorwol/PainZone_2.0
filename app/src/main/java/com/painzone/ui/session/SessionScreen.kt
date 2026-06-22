@@ -329,8 +329,19 @@ private fun ActiveExerciseCard(exercise: SessionExerciseUi) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            LastSetPreviewLine(exercise.lastSet)
         }
     }
+}
+
+@Composable
+private fun LastSetPreviewLine(preview: LastSetPreviewUi?) {
+    Text(
+        text = if (preview == null) "Brak poprzedniej sesji" else "Ostatnio: ${lastSetPreviewLine(preview)}",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 4.dp),
+    )
 }
 
 @Composable
@@ -677,13 +688,6 @@ private fun restLabel(restSeconds: Int?): String = when {
     else -> "Odpoczynek: ${restSeconds / 60} min ${restSeconds % 60}s"
 }
 
-private val Rpe.labelPl: String
-    get() = when (this) {
-        Rpe.Easy -> "Łatwa"
-        Rpe.Normal -> "Normalna"
-        Rpe.Hard -> "Ciężka"
-    }
-
 private val previewExercises = listOf(
     SessionExerciseUi(
         snapshotId = 1L,
@@ -696,6 +700,7 @@ private val previewExercises = listOf(
             LoggedSetUi(1L, 1, 10, 60.0, Rpe.Normal),
             LoggedSetUi(2L, 2, 9, 62.5, Rpe.Hard),
         ),
+        lastSet = LastSetPreviewUi(reps = 10, weight = 60.0, rpe = Rpe.Hard, daysAgo = 3),
     ),
     SessionExerciseUi(
         snapshotId = 2L,
@@ -705,6 +710,7 @@ private val previewExercises = listOf(
         plannedTargetReps = listOf(12, 12, 12),
         plannedRestSeconds = 60,
         loggedSets = emptyList(),
+        lastSet = null,
     ),
     SessionExerciseUi(
         snapshotId = 3L,
