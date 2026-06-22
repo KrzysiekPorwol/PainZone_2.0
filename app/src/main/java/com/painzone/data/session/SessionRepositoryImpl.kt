@@ -9,6 +9,8 @@ import com.painzone.domain.session.SessionDetail
 import com.painzone.domain.session.SessionExerciseDetail
 import com.painzone.domain.session.SessionExerciseSnapshot
 import com.painzone.domain.session.FinishSessionResult
+import com.painzone.domain.session.LoggedSet
+import com.painzone.domain.session.Rpe
 import com.painzone.domain.session.SessionRepository
 import com.painzone.domain.session.StartSessionResult
 import com.painzone.domain.session.WorkoutSession
@@ -89,6 +91,17 @@ class SessionRepositoryImpl @Inject constructor(
 
     override suspend fun lastWeightForExercise(exerciseId: Long): Double? =
         loggedSetDao.lastWeightForExercise(exerciseId)
+
+    override suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long {
+        val order = (loggedSetDao.maxOrderInSnapshot(snapshotId) ?: 0) + 1
+        val set = LoggedSet.log(snapshotId, order, reps, weight, rpe, Instant.now())
+        return loggedSetDao.insert(set.toEntity())
+    }
+
+    override suspend fun edit(setId: Long, reps: Int, weight: Double, rpe: Rpe?) {
+        val existing = loggedSetDao.getById(setId)?.toDomain() ?: return
+        loggedSetDao.update(existing.edit(reps, weight, rpe).toEntity())
+    }
 
     private fun SessionWithDetail.toDomain(): SessionDetail = SessionDetail(
         session = session.toDomain(),

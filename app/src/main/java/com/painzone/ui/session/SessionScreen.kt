@@ -8,13 +8,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SwapVerticalCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -24,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -31,6 +37,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,14 +52,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.painzone.domain.exercise.MuscleGroup
+import com.painzone.domain.session.Rpe
 import com.painzone.ui.library.labelPl
 import com.painzone.ui.theme.PainZoneTheme
+
+// Action handlers for the input row — bundled so previews and the scaffold stay readable.
+data class SessionInputCallbacks(
+    val onRepsChange: (String) -> Unit,
+    val onWeightChange: (String) -> Unit,
+    val onRepsIncrement: () -> Unit,
+    val onRepsDecrement: () -> Unit,
+    val onWeightIncrement: () -> Unit,
+    val onWeightDecrement: () -> Unit,
+    val onRpeSelect: (Rpe) -> Unit,
+    val onSave: () -> Unit,
+    val onEditSet: (Long) -> Unit,
+    val onCancelEdit: () -> Unit,
+) {
+    companion object {
+        val Noop = SessionInputCallbacks({}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    }
+}
 
 @Composable
 fun SessionScreen(
@@ -61,18 +91,40 @@ fun SessionScreen(
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val input by viewModel.input.collectAsStateWithLifecycle()
+    val repsFocus = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         viewModel.finished.collect { onExit() }
     }
+    LaunchedEffect(Unit) {
+        viewModel.focusReps.collect {
+            // Set may not be attached yet on first emission; ignore if so.
+            runCatching { repsFocus.requestFocus() }
+        }
+    }
 
     SessionScaffold(
         state = state,
+        input = input,
+        repsFocus = repsFocus,
         onExit = onExit,
         onFinish = viewModel::finishSession,
         onSelectExercise = viewModel::selectExercise,
         onNext = viewModel::nextExercise,
         onPrevious = viewModel::previousExercise,
+        inputCallbacks = SessionInputCallbacks(
+            onRepsChange = viewModel::updateReps,
+            onWeightChange = viewModel::updateWeight,
+            onRepsIncrement = viewModel::incrementReps,
+            onRepsDecrement = viewModel::decrementReps,
+            onWeightIncrement = viewModel::incrementWeight,
+            onWeightDecrement = viewModel::decrementWeight,
+            onRpeSelect = viewModel::selectRpe,
+            onSave = viewModel::saveSet,
+            onEditSet = viewModel::editSet,
+            onCancelEdit = viewModel::cancelEdit,
+        ),
         modifier = modifier,
     )
 }
@@ -81,11 +133,14 @@ fun SessionScreen(
 @Composable
 private fun SessionScaffold(
     state: SessionUiState,
+    input: SetInputUi,
+    repsFocus: FocusRequester,
     onExit: () -> Unit,
     onFinish: () -> Unit,
     onSelectExercise: (Int) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
+    inputCallbacks: SessionInputCallbacks,
     modifier: Modifier = Modifier,
 ) {
     var showJumpSheet by remember { mutableStateOf(false) }
@@ -107,10 +162,13 @@ private fun SessionScaffold(
             SessionUiState.NotFound -> NotFoundBody(innerPadding)
             is SessionUiState.Content -> SessionBody(
                 state = state,
+                input = input,
+                repsFocus = repsFocus,
                 innerPadding = innerPadding,
                 onNext = onNext,
                 onPrevious = onPrevious,
                 onFinish = { showFinishDialog = true },
+                inputCallbacks = inputCallbacks,
             )
         }
     }
@@ -199,37 +257,38 @@ private fun SessionTopBar(
 @Composable
 private fun SessionBody(
     state: SessionUiState.Content,
+    input: SetInputUi,
+    repsFocus: FocusRequester,
     innerPadding: PaddingValues,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onFinish: () -> Unit,
+    inputCallbacks: SessionInputCallbacks,
 ) {
     val exercise = state.activeExercise
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-            .padding(16.dp),
+            .padding(16.dp)
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         ActiveExerciseCard(exercise)
 
-        // Logging input, Last Set Preview and Rest Timer land in M3.5–M3.7.
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
-        ) {
-            Text(
-                text = "Logowanie serii pojawi się w kolejnym kroku.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp),
-            )
-        }
+        LogInputCard(
+            input = input,
+            repsFocus = repsFocus,
+            callbacks = inputCallbacks,
+        )
 
-        Box(modifier = Modifier.weight(1f))
+        // Logged sets fill the remaining space; reverse-chrono with the fresh set tappable.
+        LoggedSetList(
+            exercise = exercise,
+            editingSetId = input.editingSetId,
+            onEditSet = inputCallbacks.onEditSet,
+            modifier = Modifier.weight(1f),
+        )
 
         ExerciseNavRow(
             state = state,
@@ -267,6 +326,176 @@ private fun ActiveExerciseCard(exercise: SessionExerciseUi) {
             )
         }
     }
+}
+
+@Composable
+private fun LogInputCard(
+    input: SetInputUi,
+    repsFocus: FocusRequester,
+    callbacks: SessionInputCallbacks,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StepperField(
+                    label = "Powtórzenia",
+                    value = input.reps,
+                    onValueChange = callbacks.onRepsChange,
+                    onIncrement = callbacks.onRepsIncrement,
+                    onDecrement = callbacks.onRepsDecrement,
+                    focusRequester = repsFocus,
+                    modifier = Modifier.weight(1f),
+                )
+                StepperField(
+                    label = "Ciężar (kg)",
+                    value = input.weight,
+                    onValueChange = callbacks.onWeightChange,
+                    onIncrement = callbacks.onWeightIncrement,
+                    onDecrement = callbacks.onWeightDecrement,
+                    decimal = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            RpeChips(selected = input.rpe, onSelect = callbacks.onRpeSelect)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (input.isEditing) {
+                    OutlinedButton(onClick = callbacks.onCancelEdit, modifier = Modifier.weight(1f)) {
+                        Text("Anuluj")
+                    }
+                }
+                Button(
+                    onClick = callbacks.onSave,
+                    enabled = input.canSave,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
+                    Text(if (input.isEditing) "Zapisz zmiany" else "Zapisz serię")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepperField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
+    modifier: Modifier = Modifier,
+    decimal: Boolean = false,
+    focusRequester: FocusRequester? = null,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onDecrement) {
+                Icon(Icons.Filled.Remove, contentDescription = "Mniej $label")
+            }
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number,
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
+            )
+            IconButton(onClick = onIncrement) {
+                Icon(Icons.Filled.Add, contentDescription = "Więcej $label")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RpeChips(selected: Rpe?, onSelect: (Rpe) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Rpe.entries.forEach { rpe ->
+            FilterChip(
+                selected = selected == rpe,
+                onClick = { onSelect(rpe) },
+                label = { Text(rpe.labelPl) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoggedSetList(
+    exercise: SessionExerciseUi,
+    editingSetId: Long?,
+    onEditSet: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (exercise.loggedSets.isEmpty()) {
+        Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            Text(
+                text = "Brak serii — zaloguj pierwszą powyżej.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        return
+    }
+    val freshId = exercise.freshSetId
+    // Reverse-chrono: freshest set on top.
+    val reversed = exercise.loggedSets.sortedByDescending { it.order }
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        items(reversed, key = { it.id }) { set ->
+            val editable = set.id == freshId
+            LoggedSetRow(
+                set = set,
+                editable = editable,
+                editing = set.id == editingSetId,
+                onClick = { onEditSet(set.id) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoggedSetRow(
+    set: LoggedSetUi,
+    editable: Boolean,
+    editing: Boolean,
+    onClick: () -> Unit,
+) {
+    val rpeSuffix = set.rpe?.let { " / ${it.labelPl}" }.orEmpty()
+    ListItem(
+        headlineContent = { Text("Seria ${set.order}") },
+        supportingContent = { Text("${set.reps} × ${formatWeight(set.weight)} kg$rpeSuffix") },
+        trailingContent = if (editable) { { Text("edytuj") } } else null,
+        colors = if (editing) {
+            ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        } else {
+            ListItemDefaults.colors()
+        },
+        modifier = if (editable) Modifier.clickable(onClick = onClick) else Modifier,
+    )
 }
 
 @Composable
@@ -400,50 +629,92 @@ private fun restLabel(restSeconds: Int?): String = when {
     else -> "Odpoczynek: ${restSeconds / 60} min ${restSeconds % 60}s"
 }
 
+private val Rpe.labelPl: String
+    get() = when (this) {
+        Rpe.Easy -> "Łatwa"
+        Rpe.Normal -> "Normalna"
+        Rpe.Hard -> "Ciężka"
+    }
+
 private val previewExercises = listOf(
-    SessionExerciseUi(1L, "Wyciskanie sztangi", MuscleGroup.Chest, listOf(10, 9, 8), 90, 1),
-    SessionExerciseUi(2L, "Rozpiętki hantlami", MuscleGroup.Chest, listOf(12, 12, 12), 60, 0),
-    SessionExerciseUi(3L, "Wyciskanie francuskie", MuscleGroup.Triceps, listOf(10, 10), null, 0),
+    SessionExerciseUi(
+        snapshotId = 1L,
+        exerciseId = 10L,
+        name = "Wyciskanie sztangi",
+        muscleGroup = MuscleGroup.Chest,
+        plannedTargetReps = listOf(10, 9, 8),
+        plannedRestSeconds = 90,
+        loggedSets = listOf(
+            LoggedSetUi(1L, 1, 10, 60.0, Rpe.Normal),
+            LoggedSetUi(2L, 2, 9, 62.5, Rpe.Hard),
+        ),
+    ),
+    SessionExerciseUi(
+        snapshotId = 2L,
+        exerciseId = 11L,
+        name = "Rozpiętki hantlami",
+        muscleGroup = MuscleGroup.Chest,
+        plannedTargetReps = listOf(12, 12, 12),
+        plannedRestSeconds = 60,
+        loggedSets = emptyList(),
+    ),
+    SessionExerciseUi(
+        snapshotId = 3L,
+        exerciseId = 12L,
+        name = "Wyciskanie francuskie",
+        muscleGroup = MuscleGroup.Triceps,
+        plannedTargetReps = listOf(10, 10),
+        plannedRestSeconds = null,
+        loggedSets = emptyList(),
+    ),
 )
+
+@Composable
+private fun previewScaffold(state: SessionUiState, input: SetInputUi = SetInputUi(reps = "10", weight = "62.5")) {
+    PainZoneTheme {
+        Surface {
+            SessionScaffold(
+                state = state,
+                input = input,
+                repsFocus = remember { FocusRequester() },
+                onExit = {},
+                onFinish = {},
+                onSelectExercise = {},
+                onNext = {},
+                onPrevious = {},
+                inputCallbacks = SessionInputCallbacks.Noop,
+            )
+        }
+    }
+}
 
 @Preview(showBackground = true, name = "Loading")
 @Composable
-private fun SessionLoadingPreview() {
-    PainZoneTheme {
-        Surface { SessionScaffold(SessionUiState.Loading, {}, {}, {}, {}, {}) }
-    }
-}
+private fun SessionLoadingPreview() = previewScaffold(SessionUiState.Loading)
 
 @Preview(showBackground = true, name = "Not found")
 @Composable
-private fun SessionNotFoundPreview() {
-    PainZoneTheme {
-        Surface { SessionScaffold(SessionUiState.NotFound, {}, {}, {}, {}, {}) }
-    }
-}
+private fun SessionNotFoundPreview() = previewScaffold(SessionUiState.NotFound)
 
-@Preview(showBackground = true, name = "Content — first exercise")
+@Preview(showBackground = true, name = "Content — logging (2 sets done)")
 @Composable
-private fun SessionContentFirstPreview() {
-    PainZoneTheme {
-        Surface {
-            SessionScaffold(
-                SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0),
-                {}, {}, {}, {}, {},
-            )
-        }
-    }
-}
+private fun SessionContentFirstPreview() =
+    previewScaffold(SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0))
+
+@Preview(showBackground = true, name = "Content — empty exercise")
+@Composable
+private fun SessionContentEmptyExercisePreview() =
+    previewScaffold(SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 1))
+
+@Preview(showBackground = true, name = "Content — editing fresh set")
+@Composable
+private fun SessionContentEditingPreview() =
+    previewScaffold(
+        SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0),
+        input = SetInputUi(reps = "9", weight = "62.5", rpe = Rpe.Hard, editingSetId = 2L),
+    )
 
 @Preview(showBackground = true, name = "Content — last exercise")
 @Composable
-private fun SessionContentLastPreview() {
-    PainZoneTheme {
-        Surface {
-            SessionScaffold(
-                SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 2),
-                {}, {}, {}, {}, {},
-            )
-        }
-    }
-}
+private fun SessionContentLastPreview() =
+    previewScaffold(SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 2))

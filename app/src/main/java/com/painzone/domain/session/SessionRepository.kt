@@ -24,6 +24,13 @@ interface SessionRepository {
     // Pre-fill weight for the input stepper (ciężar z ostatniej sesji): the most recently
     // logged weight for this exercise across prior sessions, or null when there is no history.
     suspend fun lastWeightForExercise(exerciseId: Long): Double?
+
+    // Appends a logged set to the snapshot (order = max+1, completedAt = now). Returns the new id.
+    suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long
+
+    // Overwrites an existing logged set (reps/weight/rpe) — backs "edycja świeżej serii nadpisuje".
+    // No-op when the set no longer exists. Order and completedAt are preserved.
+    suspend fun edit(setId: Long, reps: Int, weight: Double, rpe: Rpe?)
 }
 
 data class SessionDetail(
