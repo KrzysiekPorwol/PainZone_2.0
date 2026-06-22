@@ -43,4 +43,4 @@ Prowadzi skill `.claude/skills/design-phase/SKILL.md` — struktura Spec/Rationa
 
 ## Sposób pracy
 
-Podczas pracy nad kodem stosuj reguły z `.claude/rules/workflow.md`.
+Pracuj samodzielnie: dostajesz task → robisz całość (kod + build + commit lokalny) → meldujesz co wprowadziłeś i jak zrobić smoke test. Bez pokazywania planu i czekania na akceptację w trakcie. Push na `main` dopiero po potwierdzeniu smoke testu przez usera. Szczegóły cyklu: `.claude/rules/workflow.md`.

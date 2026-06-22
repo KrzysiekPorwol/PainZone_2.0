@@ -9,11 +9,12 @@
 2. Encje + invarianty w `docs/05-*.md`. Każda non-obvious decyzja techniczna → ADR w `docs/adr/`.
 3. Unit testy invariantów domain (pure Kotlin, brak Android deps).
 4. Compose `@Preview` dla każdego stanu ekranu (loading / empty / content / error).
-5. Manual smoke test golden path zaliczony (skill `verify`).
-6. Commit przez skill `commit` (EN+PL), push na `origin/main`.
+5. Commit lokalny przez skill `commit` (EN+PL).
+6. Manual smoke test golden path zaliczony przez usera (skill `verify`).
+7. Push na `origin/main` (po smoke OK).
 
 ### Definition of Done — task (sesja)
-Patrz `docs/rules.md#Definition-of-Done-task`. DoD ficzy = DoD wszystkich tasków + smoke E2E milestone.
+Patrz `.claude/rules/workflow.md#Definition-of-Done-task`. DoD ficzy = DoD wszystkich tasków + smoke E2E milestone.
 
 ### Quality Scenarios (NFR)
 
