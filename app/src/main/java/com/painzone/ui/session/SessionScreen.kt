@@ -14,12 +14,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SwapVerticalCircle
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -34,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,9 +61,15 @@ fun SessionScreen(
     viewModel: SessionViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.finished.collect { onExit() }
+    }
+
     SessionScaffold(
         state = state,
         onExit = onExit,
+        onFinish = viewModel::finishSession,
         onSelectExercise = viewModel::selectExercise,
         onNext = viewModel::nextExercise,
         onPrevious = viewModel::previousExercise,
@@ -71,12 +82,14 @@ fun SessionScreen(
 private fun SessionScaffold(
     state: SessionUiState,
     onExit: () -> Unit,
+    onFinish: () -> Unit,
     onSelectExercise: (Int) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showJumpSheet by remember { mutableStateOf(false) }
+    var showFinishDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -85,6 +98,7 @@ private fun SessionScaffold(
                 state = state,
                 onExit = onExit,
                 onJump = { showJumpSheet = true },
+                onFinish = { showFinishDialog = true },
             )
         },
     ) { innerPadding ->
@@ -96,8 +110,19 @@ private fun SessionScaffold(
                 innerPadding = innerPadding,
                 onNext = onNext,
                 onPrevious = onPrevious,
+                onFinish = { showFinishDialog = true },
             )
         }
+    }
+
+    if (showFinishDialog) {
+        FinishSessionDialog(
+            onConfirm = {
+                showFinishDialog = false
+                onFinish()
+            },
+            onDismiss = { showFinishDialog = false },
+        )
     }
 
     if (showJumpSheet && state is SessionUiState.Content) {
@@ -120,7 +145,9 @@ private fun SessionTopBar(
     state: SessionUiState,
     onExit: () -> Unit,
     onJump: () -> Unit,
+    onFinish: () -> Unit,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
     TopAppBar(
         title = {
             if (state is SessionUiState.Content) {
@@ -149,6 +176,21 @@ private fun SessionTopBar(
                         contentDescription = "Skocz do ćwiczenia",
                     )
                 }
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Więcej")
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Zakończ sesję") },
+                        onClick = {
+                            menuExpanded = false
+                            onFinish()
+                        },
+                    )
+                }
             }
         },
     )
@@ -160,6 +202,7 @@ private fun SessionBody(
     innerPadding: PaddingValues,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
+    onFinish: () -> Unit,
 ) {
     val exercise = state.activeExercise
     Column(
@@ -188,7 +231,12 @@ private fun SessionBody(
 
         Box(modifier = Modifier.weight(1f))
 
-        ExerciseNavRow(state = state, onNext = onNext, onPrevious = onPrevious)
+        ExerciseNavRow(
+            state = state,
+            onNext = onNext,
+            onPrevious = onPrevious,
+            onFinish = onFinish,
+        )
     }
 }
 
@@ -226,6 +274,7 @@ private fun ExerciseNavRow(
     state: SessionUiState.Content,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
+    onFinish: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -250,12 +299,24 @@ private fun ExerciseNavRow(
                 )
             }
         } else {
-            // "Zakończ sesję" → D2 dialog wires up in M3.10.
-            OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.weight(1f)) {
+            // Last exercise: finishing here is the natural end. Mid-session finish
+            // is also available from the top-bar menu. Full D2 summary lands in M3.10.
+            Button(onClick = onFinish, modifier = Modifier.weight(1f)) {
                 Text("Zakończ sesję")
             }
         }
     }
+}
+
+@Composable
+private fun FinishSessionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Zakończyć sesję?") },
+        text = { Text("Sesja zostanie zapisana jako zakończona. Możesz to zrobić nawet w połowie planu.") },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Zakończ") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj") } },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -349,7 +410,7 @@ private val previewExercises = listOf(
 @Composable
 private fun SessionLoadingPreview() {
     PainZoneTheme {
-        Surface { SessionScaffold(SessionUiState.Loading, {}, {}, {}, {}) }
+        Surface { SessionScaffold(SessionUiState.Loading, {}, {}, {}, {}, {}) }
     }
 }
 
@@ -357,7 +418,7 @@ private fun SessionLoadingPreview() {
 @Composable
 private fun SessionNotFoundPreview() {
     PainZoneTheme {
-        Surface { SessionScaffold(SessionUiState.NotFound, {}, {}, {}, {}) }
+        Surface { SessionScaffold(SessionUiState.NotFound, {}, {}, {}, {}, {}) }
     }
 }
 
@@ -368,7 +429,7 @@ private fun SessionContentFirstPreview() {
         Surface {
             SessionScaffold(
                 SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0),
-                {}, {}, {}, {},
+                {}, {}, {}, {}, {},
             )
         }
     }
@@ -381,7 +442,7 @@ private fun SessionContentLastPreview() {
         Surface {
             SessionScaffold(
                 SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 2),
-                {}, {}, {}, {},
+                {}, {}, {}, {}, {},
             )
         }
     }

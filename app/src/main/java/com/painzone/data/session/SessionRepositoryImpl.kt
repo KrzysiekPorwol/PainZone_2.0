@@ -8,6 +8,7 @@ import com.painzone.data.session.relation.SessionWithDetail
 import com.painzone.domain.session.SessionDetail
 import com.painzone.domain.session.SessionExerciseDetail
 import com.painzone.domain.session.SessionExerciseSnapshot
+import com.painzone.domain.session.FinishSessionResult
 import com.painzone.domain.session.SessionRepository
 import com.painzone.domain.session.StartSessionResult
 import com.painzone.domain.session.WorkoutSession
@@ -76,6 +77,14 @@ class SessionRepositoryImpl @Inject constructor(
 
         val sessionId = sessionDao.startWithSnapshots(session, snapshots)
         return StartSessionResult.Success(sessionId)
+    }
+
+    override suspend fun finish(sessionId: Long): FinishSessionResult {
+        val session = sessionDao.getById(sessionId)?.toDomain()
+            ?: return FinishSessionResult.NotFound
+        if (!session.isInProgress) return FinishSessionResult.AlreadyFinished
+        sessionDao.update(session.finish(Instant.now()).toEntity())
+        return FinishSessionResult.Success
     }
 
     override suspend fun lastWeightForExercise(exerciseId: Long): Double? =

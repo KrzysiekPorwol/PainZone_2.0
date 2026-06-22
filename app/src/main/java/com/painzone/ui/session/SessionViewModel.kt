@@ -8,16 +8,20 @@ import com.painzone.domain.session.SessionRepository
 import com.painzone.ui.navigation.Session
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    repository: SessionRepository,
+    private val repository: SessionRepository,
 ) : ViewModel() {
 
     private val sessionId: Long = savedStateHandle.toRoute<Session>().sessionId
@@ -59,6 +63,17 @@ class SessionViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = SessionUiState.Loading,
         )
+
+    // One-shot: session finished, screen should leave S9.
+    private val _finished = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val finished: SharedFlow<Unit> = _finished.asSharedFlow()
+
+    fun finishSession() {
+        viewModelScope.launch {
+            repository.finish(sessionId)
+            _finished.emit(Unit)
+        }
+    }
 
     fun selectExercise(index: Int) {
         activeIndex.value = index

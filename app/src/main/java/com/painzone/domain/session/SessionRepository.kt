@@ -16,6 +16,11 @@ interface SessionRepository {
     // SessionExerciseSnapshot per planned exercise (cel z planu). Atomic; enforces ≤1 in-progress.
     suspend fun start(plannedDayId: Long): StartSessionResult
 
+    // Finishes the in-progress session (stamps finishedAt = now). Allowed mid-plan —
+    // an unfinished plan is normal. Idempotent: a finished session stays finished.
+    // Full D2 summary + read-only enforcement land in M3.10.
+    suspend fun finish(sessionId: Long): FinishSessionResult
+
     // Pre-fill weight for the input stepper (ciężar z ostatniej sesji): the most recently
     // logged weight for this exercise across prior sessions, or null when there is no history.
     suspend fun lastWeightForExercise(exerciseId: Long): Double?
@@ -36,4 +41,10 @@ sealed interface StartSessionResult {
     data object DayNotFound : StartSessionResult
     data object AlreadyInProgress : StartSessionResult
     data object EmptyDay : StartSessionResult
+}
+
+sealed interface FinishSessionResult {
+    data object Success : FinishSessionResult
+    data object NotFound : FinishSessionResult
+    data object AlreadyFinished : FinishSessionResult
 }

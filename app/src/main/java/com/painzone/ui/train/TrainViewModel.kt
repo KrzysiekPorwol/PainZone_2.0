@@ -33,15 +33,24 @@ class TrainViewModel @Inject constructor(
             sessionRepository.observeInProgress(),
         ) { active, inProgress -> active to inProgress }
             .flatMapLatest { (active, inProgress) ->
+                val resume = inProgress?.let {
+                    ResumeInfo(
+                        sessionId = it.id,
+                        planName = it.planNameSnapshot,
+                        dayName = it.dayNameSnapshot,
+                    )
+                }
                 if (active == null) {
-                    flowOf(TrainUiState.NoActivePlan)
+                    flowOf(TrainUiState.Loaded(resume = resume, activePlan = null))
                 } else {
                     planRepository.observeDaysByPlan(active.id).map { days ->
                         val firstDay = days.minByOrNull { it.order }
-                        TrainUiState.ActivePlan(
-                            planName = active.name,
-                            startableDay = firstDay?.let { StartableDay(it.id, it.name) },
-                            inProgressSessionId = inProgress?.id,
+                        TrainUiState.Loaded(
+                            resume = resume,
+                            activePlan = ActivePlanInfo(
+                                planName = active.name,
+                                startableDay = firstDay?.let { StartableDay(it.id, it.name) },
+                            ),
                         )
                     }
                 }
@@ -60,16 +69,12 @@ class TrainViewModel @Inject constructor(
     val snackbarEvents: SharedFlow<String> = _snackbarEvents.asSharedFlow()
 
     fun onStartClick() {
-        val state = uiState.value as? TrainUiState.ActivePlan ?: return
+        val loaded = uiState.value as? TrainUiState.Loaded ?: return
+        val day = loaded.activePlan?.startableDay ?: return
         viewModelScope.launch {
-            // Resume wins over start: ≤1 in-progress session globally.
-            state.inProgressSessionId?.let {
-                _openSession.emit(it)
-                return@launch
-            }
-            val day = state.startableDay ?: return@launch
             when (val result = sessionRepository.start(day.dayId)) {
                 is StartSessionResult.Success -> _openSession.emit(result.sessionId)
+                // ≤1 in-progress globally: fall back to resuming the existing one.
                 StartSessionResult.AlreadyInProgress ->
                     sessionRepository.getInProgress()?.let { _openSession.emit(it.id) }
                 StartSessionResult.EmptyDay ->

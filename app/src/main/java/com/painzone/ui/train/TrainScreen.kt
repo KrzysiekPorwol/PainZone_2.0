@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -54,6 +55,7 @@ fun TrainScreen(
         onManageLibrary = onManageLibrary,
         onGoToPlans = onGoToPlans,
         onStart = viewModel::onStartClick,
+        onResume = onOpenSession,
         modifier = modifier,
     )
 }
@@ -65,6 +67,7 @@ private fun TrainScaffold(
     onManageLibrary: () -> Unit,
     onGoToPlans: () -> Unit,
     onStart: () -> Unit,
+    onResume: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -74,8 +77,12 @@ private fun TrainScaffold(
     ) { innerPadding ->
         when (state) {
             TrainUiState.Loading -> LoadingBody(innerPadding)
-            TrainUiState.NoActivePlan -> NoActivePlanBody(innerPadding, onGoToPlans)
-            is TrainUiState.ActivePlan -> ActivePlanBody(state, innerPadding, onStart)
+            is TrainUiState.Loaded ->
+                if (state.isEmpty) {
+                    NoActivePlanBody(innerPadding, onGoToPlans)
+                } else {
+                    LoadedBody(state, innerPadding, onStart, onResume)
+                }
         }
     }
 }
@@ -122,67 +129,122 @@ private fun NoActivePlanBody(innerPadding: PaddingValues, onGoToPlans: () -> Uni
 }
 
 @Composable
-private fun ActivePlanBody(
-    state: TrainUiState.ActivePlan,
+private fun LoadedBody(
+    state: TrainUiState.Loaded,
     innerPadding: PaddingValues,
     onStart: () -> Unit,
+    onResume: (Long) -> Unit,
 ) {
-    val resuming = state.inProgressSessionId != null
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
             .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+        state.resume?.let { ResumeCard(it, onResume) }
+        state.activePlan?.let {
+            // Can't start a second session while one is in progress (≤1 global).
+            ActivePlanCard(it, sessionInProgress = state.resume != null, onStart = onStart)
+        }
+    }
+}
+
+@Composable
+private fun ResumeCard(resume: ResumeInfo, onResume: (Long) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "Sesja w toku",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Text(
+                text = "${resume.planName} · ${resume.dayName}",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Button(
+                onClick = { onResume(resume.sessionId) },
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(
-                    text = "Aktywny plan",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(text = state.planName, style = MaterialTheme.typography.titleLarge)
-                state.startableDay?.let {
-                    Text(
-                        text = if (resuming) "Sesja w toku" else "Start: ${it.dayName}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Button(
-                    onClick = onStart,
-                    // No day means nothing to start; resume stays available regardless.
-                    enabled = resuming || state.startableDay != null,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(if (resuming) "Wznów sesję" else "Zacznij")
-                }
+                Text("Wznów sesję")
             }
         }
     }
 }
+
+@Composable
+private fun ActivePlanCard(
+    plan: ActivePlanInfo,
+    sessionInProgress: Boolean,
+    onStart: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = "Aktywny plan",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(text = plan.planName, style = MaterialTheme.typography.titleLarge)
+            val hint = when {
+                sessionInProgress -> "Zakończ bieżącą sesję, aby zacząć nową."
+                plan.startableDay != null -> "Start: ${plan.startableDay.dayName}"
+                else -> "Dodaj sesję treningową do planu, aby zacząć."
+            }
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(
+                onClick = onStart,
+                enabled = !sessionInProgress && plan.startableDay != null,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Zacznij")
+            }
+        }
+    }
+}
+
+private val previewPlan = ActivePlanInfo("Push/Pull/Legs", StartableDay(1L, "Push"))
 
 @Preview(showBackground = true, name = "Loading")
 @Composable
 private fun TrainLoadingPreview() {
     PainZoneTheme {
         Surface {
-            TrainScaffold(TrainUiState.Loading, remember { SnackbarHostState() }, {}, {}, {})
+            TrainScaffold(TrainUiState.Loading, remember { SnackbarHostState() }, {}, {}, {}, {})
         }
     }
 }
 
-@Preview(showBackground = true, name = "No active plan")
+@Preview(showBackground = true, name = "Empty (no plan, no session)")
 @Composable
-private fun TrainNoActivePlanPreview() {
+private fun TrainEmptyPreview() {
     PainZoneTheme {
         Surface {
-            TrainScaffold(TrainUiState.NoActivePlan, remember { SnackbarHostState() }, {}, {}, {})
+            TrainScaffold(
+                TrainUiState.Loaded(resume = null, activePlan = null),
+                remember { SnackbarHostState() }, {}, {}, {}, {},
+            )
         }
     }
 }
@@ -193,21 +255,24 @@ private fun TrainActivePlanPreview() {
     PainZoneTheme {
         Surface {
             TrainScaffold(
-                TrainUiState.ActivePlan("Push/Pull/Legs", StartableDay(1L, "Push"), null),
-                remember { SnackbarHostState() }, {}, {}, {},
+                TrainUiState.Loaded(resume = null, activePlan = previewPlan),
+                remember { SnackbarHostState() }, {}, {}, {}, {},
             )
         }
     }
 }
 
-@Preview(showBackground = true, name = "Active plan — resume")
+@Preview(showBackground = true, name = "Resume + active plan")
 @Composable
-private fun TrainActivePlanResumePreview() {
+private fun TrainResumePreview() {
     PainZoneTheme {
         Surface {
             TrainScaffold(
-                TrainUiState.ActivePlan("Push/Pull/Legs", StartableDay(1L, "Push"), 42L),
-                remember { SnackbarHostState() }, {}, {}, {},
+                TrainUiState.Loaded(
+                    resume = ResumeInfo(42L, "Full Body A", "Dzień 1"),
+                    activePlan = previewPlan,
+                ),
+                remember { SnackbarHostState() }, {}, {}, {}, {},
             )
         }
     }
