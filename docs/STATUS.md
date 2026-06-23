@@ -2,7 +2,7 @@
 
 # Aktualny stan projektu
 
-- **Etap:** Faza 8 — Kod. Milestones **M0 (Walking Skeleton)** i **M1 (Library)** ✅ zamknięte (M0.1–M0.5, M1.1–M1.7). **M2 (Plans)** ✅ zamknięte (M2.1–M2.9). **M3 (Session)** w toku: M3.1 ✅, M3.2 ✅, M3.3 ✅, M3.4 ✅, M3.5 ✅, M3.6 ✅. Następny: **M3.7 · Rest Timer** (auto-start po zapisie serii wg `restSeconds` z planu, `restBeforeSeconds=actual` w kolejnym `LoggedSet`).
+- **Etap:** Faza 8 — Kod. Milestones **M0 (Walking Skeleton)** i **M1 (Library)** ✅ zamknięte (M0.1–M0.5, M1.1–M1.7). **M2 (Plans)** ✅ zamknięte (M2.1–M2.9). **M3 (Session)** w toku: M3.1 ✅, M3.2 ✅, M3.3 ✅, M3.4 ✅, M3.5 ✅, M3.6 ✅, M3.7 ✅. Następny: **M3.8 · Timer overflow** (wibracja + dźwięk na przekroczenie targetu, timer dalej liczy).
 - **Proces designu:** `docs/00-process.md` — czytaj **gdy** dyskutujemy fazę designu, status fazy się zmienia, lub user pyta "gdzie jesteśmy"
 - **Glossary domenowy:** `docs/glossary.md` — czytaj **gdy** dyskutujemy termin domenowy lub piszemy artefakt z domen.
 
