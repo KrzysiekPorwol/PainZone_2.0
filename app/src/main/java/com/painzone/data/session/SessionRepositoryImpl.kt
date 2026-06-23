@@ -17,6 +17,7 @@ import com.painzone.domain.session.StartSessionResult
 import com.painzone.domain.session.WorkoutSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -105,8 +106,14 @@ class SessionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long {
+        val now = Instant.now()
         val order = (loggedSetDao.maxOrderInSnapshot(snapshotId) ?: 0) + 1
-        val set = LoggedSet.log(snapshotId, order, reps, weight, rpe, Instant.now())
+        // Actual rest = now − previous set's completedAt (the rest clock started when it was saved).
+        // First set of the exercise has no prior set, so no rest is recorded.
+        val restBeforeSeconds = loggedSetDao.lastCompletedAtInSnapshot(snapshotId)?.let { prev ->
+            Duration.between(prev, now).seconds.coerceAtLeast(0L).toInt()
+        }
+        val set = LoggedSet.log(snapshotId, order, reps, weight, rpe, now, restBeforeSeconds)
         return loggedSetDao.insert(set.toEntity())
     }
 

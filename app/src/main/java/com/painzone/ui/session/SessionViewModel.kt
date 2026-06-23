@@ -9,10 +9,14 @@ import com.painzone.domain.session.Rpe
 import com.painzone.domain.session.SessionRepository
 import com.painzone.ui.navigation.Session
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -61,7 +66,7 @@ class SessionViewModel @Inject constructor(
                             plannedTargetReps = ex.snapshot.plannedTargetReps,
                             plannedRestSeconds = ex.snapshot.plannedRestSeconds,
                             loggedSets = ex.loggedSets.map { set ->
-                                LoggedSetUi(set.id, set.order, set.reps, set.weight, set.rpe)
+                                LoggedSetUi(set.id, set.order, set.reps, set.weight, set.rpe, set.completedAt)
                             },
                             lastSession = previews[ex.snapshot.exerciseId].orEmpty(),
                         )
@@ -81,6 +86,21 @@ class SessionViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = SessionUiState.Loading,
+        )
+
+    // Rest Timer (M3.7): count-up since the active exercise's last logged set, ticking once a
+    // second while observed. Derived from completedAt — auto-starts on save, auto-resets on the
+    // next save, and survives process death (M3.9) since nothing is held in memory.
+    val restTimer: StateFlow<RestTimerUi?> =
+        combine(uiState, secondTicker()) { state, now ->
+            val active = (state as? SessionUiState.Content)?.activeExercise ?: return@combine null
+            val lastSet = active.loggedSets.maxByOrNull { it.order } ?: return@combine null
+            val elapsed = Duration.between(lastSet.completedAt, now).seconds.coerceAtLeast(0L).toInt()
+            RestTimerUi(elapsedSeconds = elapsed, targetSeconds = active.plannedRestSeconds)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null,
         )
 
     private val _input = MutableStateFlow(SetInputUi())
@@ -239,6 +259,14 @@ class SessionViewModel @Inject constructor(
             rpe = null,
             editingSetId = null,
         )
+    }
+
+    // Emits the current instant immediately, then every second — drives the rest count-up.
+    private fun secondTicker(): Flow<Instant> = flow {
+        while (true) {
+            emit(Instant.now())
+            delay(1_000)
+        }
     }
 
     private companion object {

@@ -227,6 +227,30 @@ class SessionRepositoryImplTest {
     }
 
     @Test
+    fun `log first set records no rest before it`() = runTest {
+        val snapId = store.seedSnapshot(sessionId = 1L, exerciseId = 1L)
+
+        val setId = repo.log(snapId, reps = 10, weight = 60.0, rpe = null)
+
+        val set = store.sets[setId]!!
+        assertEquals(1, set.order)
+        assertNull(set.restBeforeSeconds)
+    }
+
+    @Test
+    fun `log subsequent set records actual rest since the previous set`() = runTest {
+        val snapId = store.seedSnapshot(sessionId = 1L, exerciseId = 1L)
+        // Previous set finished two minutes ago; rest before the new set should be ~120s.
+        store.seedSet(snapId, order = 1, reps = 10, weight = 60.0, at = Instant.now().minusSeconds(120))
+
+        val setId = repo.log(snapId, reps = 9, weight = 62.5, rpe = null)
+
+        val set = store.sets[setId]!!
+        assertEquals(2, set.order)
+        assertTrue("expected ~120s rest, got ${set.restBeforeSeconds}", set.restBeforeSeconds!! >= 115)
+    }
+
+    @Test
     fun `lastSessionSetsForExercise is empty when only the current session has sets`() = runTest {
         val exId = exerciseDao.seed("Squat", MuscleGroup.Legs)
         val currentSnap = store.seedSnapshot(sessionId = 2L, exerciseId = exId)
@@ -372,7 +396,13 @@ private class FakeSessionExerciseSnapshotDao(
 }
 
 private class FakeLoggedSetDao(private val store: FakeSessionStore) : LoggedSetDao {
-    override suspend fun insert(entity: LoggedSetEntity): Long = throw NotImplementedError()
+    override suspend fun insert(entity: LoggedSetEntity): Long {
+        val id = store.nextSetId++
+        store.sets[id] = entity.copy(id = id)
+        store.bump()
+        return id
+    }
+
     override suspend fun update(entity: LoggedSetEntity) = throw NotImplementedError()
     override suspend fun deleteById(id: Long) = throw NotImplementedError()
     override suspend fun getById(id: Long): LoggedSetEntity? = store.sets[id]
@@ -388,6 +418,11 @@ private class FakeLoggedSetDao(private val store: FakeSessionStore) : LoggedSetD
     override suspend fun maxOrderInSnapshot(snapshotId: Long): Int? =
         store.sets.values.filter { it.sessionExerciseSnapshotId == snapshotId }
             .maxOfOrNull { it.order }
+
+    override suspend fun lastCompletedAtInSnapshot(snapshotId: Long): Instant? =
+        store.sets.values.filter { it.sessionExerciseSnapshotId == snapshotId }
+            .maxByOrNull { it.order }
+            ?.completedAt
 
     override suspend fun lastWeightForExercise(exerciseId: Long): Double? {
         val snapIds = store.snapshots.values.filter { it.exerciseId == exerciseId }.map { it.id }

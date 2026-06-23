@@ -52,6 +52,7 @@ fun LoggedSetEntity.toDomain(): LoggedSet = LoggedSet(
     weight = weight,
     rpe = rpe,
     completedAt = completedAt,
+    restBeforeSeconds = restBeforeSeconds,
 )
 
 fun LoggedSet.toEntity(): LoggedSetEntity = LoggedSetEntity(
@@ -62,4 +63,5 @@ fun LoggedSet.toEntity(): LoggedSetEntity = LoggedSetEntity(
     weight = weight,
     rpe = rpe,
     completedAt = completedAt,
+    restBeforeSeconds = restBeforeSeconds,
 )

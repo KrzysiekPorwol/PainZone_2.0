@@ -44,16 +44,17 @@
 | `weight` | `Double` | >=0 |
 | `rpe` | `Rpe?` | nullable, enum (Easy/Normal/Hard) |
 | `completedAt` | `Instant` | non-null, set on insert |
+| `restBeforeSeconds` | `Int?` | null lub >=0. Faktyczny odpoczynek przed serią (sekundy). null = pierwsza seria ćwiczenia. [[adr/0008-rest-persisted-not-derived]] |
 
-**Invarianty:** `reps >= 1` (zero = nie loguj). `weight >= 0` (0 OK dla bodyweight). `order` definiuje sekwencję serii w ćwiczeniu — re-numerated przy delete.
+**Invarianty:** `reps >= 1` (zero = nie loguj). `weight >= 0` (0 OK dla bodyweight). `order` definiuje sekwencję serii w ćwiczeniu — re-numerated przy delete. `restBeforeSeconds` ustawiany w `log()` (`now − completedAt` poprzedniej serii), nietykany przez `edit()`.
 
-**Operacje:** `log(snapshotId, reps, weight, rpe?)` (append: `order = max+1`, `completedAt = now`) · `edit(id, reps, weight, rpe?)` · `delete(id)` (hard, re-sequence).
+**Operacje:** `log(snapshotId, reps, weight, rpe?)` (append: `order = max+1`, `completedAt = now`, `restBeforeSeconds` z różnicy do poprzedniej serii) · `edit(id, reps, weight, rpe?)` · `delete(id)` (hard, re-sequence).
 
 ### Rpe enum
 `Easy | Normal | Hard` — patrz [`glossary.md#RPE`](glossary.md). Opcjonalne na LoggedSet.
 
-### Rest interval — derived
-Rest przed serią = `completedAt[n] - completedAt[n-1]` w obrębie tego samego `SessionExerciseSnapshot`. Pierwsza seria: "—". Nie persistujemy — derive w query.
+### Rest interval — persistowany
+Rest przed serią persistowany w `LoggedSet.restBeforeSeconds` (`now − completedAt` poprzedniej serii w tym samym `SessionExerciseSnapshot`, liczony w `log()`). Pierwsza seria: `null`. Banner timera w UI liczy count-up z `completedAt` ostatniej serii — auto-start po zapisie. Decyzja i uzasadnienie: [[adr/0008-rest-persisted-not-derived]].
 
 ### 1RM estimate — derived
 Epley: `weight × (1 + reps / 30)` per LoggedSet. Best set per Exercise = `MAX(1RM)` w okresie filtra (US-6).

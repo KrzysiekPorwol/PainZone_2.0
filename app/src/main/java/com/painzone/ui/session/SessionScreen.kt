@@ -92,6 +92,7 @@ fun SessionScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val input by viewModel.input.collectAsStateWithLifecycle()
+    val restTimer by viewModel.restTimer.collectAsStateWithLifecycle()
     val repsFocus = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -107,6 +108,7 @@ fun SessionScreen(
     SessionScaffold(
         state = state,
         input = input,
+        restTimer = restTimer,
         repsFocus = repsFocus,
         onExit = onExit,
         onFinish = viewModel::finishSession,
@@ -134,6 +136,7 @@ fun SessionScreen(
 private fun SessionScaffold(
     state: SessionUiState,
     input: SetInputUi,
+    restTimer: RestTimerUi?,
     repsFocus: FocusRequester,
     onExit: () -> Unit,
     onFinish: () -> Unit,
@@ -163,6 +166,7 @@ private fun SessionScaffold(
             is SessionUiState.Content -> SessionBody(
                 state = state,
                 input = input,
+                restTimer = restTimer,
                 repsFocus = repsFocus,
                 innerPadding = innerPadding,
                 onNext = onNext,
@@ -258,6 +262,7 @@ private fun SessionTopBar(
 private fun SessionBody(
     state: SessionUiState.Content,
     input: SetInputUi,
+    restTimer: RestTimerUi?,
     repsFocus: FocusRequester,
     innerPadding: PaddingValues,
     onNext: () -> Unit,
@@ -301,6 +306,46 @@ private fun SessionBody(
             onPrevious = onPrevious,
             onFinish = onFinish,
         )
+
+        if (restTimer != null) {
+            RestTimerBanner(restTimer)
+        }
+    }
+}
+
+@Composable
+private fun RestTimerBanner(timer: RestTimerUi) {
+    // Over-target gets an accent here; the haptic/sound alert itself arrives in M3.8.
+    val container =
+        if (timer.isOverTarget) MaterialTheme.colorScheme.tertiaryContainer
+        else MaterialTheme.colorScheme.surfaceVariant
+    val onContainer =
+        if (timer.isOverTarget) MaterialTheme.colorScheme.onTertiaryContainer
+        else MaterialTheme.colorScheme.onSurfaceVariant
+    Surface(
+        color = container,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Odpoczynek",
+                style = MaterialTheme.typography.labelLarge,
+                color = onContainer,
+            )
+            val target = timer.targetSeconds?.let { " / ${formatRestClock(it)}" }.orEmpty()
+            Text(
+                text = "${formatRestClock(timer.elapsedSeconds)}$target",
+                style = MaterialTheme.typography.titleMedium,
+                color = onContainer,
+            )
+        }
     }
 }
 
@@ -735,12 +780,17 @@ private val previewExercises = listOf(
 )
 
 @Composable
-private fun previewScaffold(state: SessionUiState, input: SetInputUi = SetInputUi(reps = "10", weight = "62.5")) {
+private fun previewScaffold(
+    state: SessionUiState,
+    input: SetInputUi = SetInputUi(reps = "10", weight = "62.5"),
+    restTimer: RestTimerUi? = null,
+) {
     PainZoneTheme {
         Surface {
             SessionScaffold(
                 state = state,
                 input = input,
+                restTimer = restTimer,
                 repsFocus = remember { FocusRequester() },
                 onExit = {},
                 onFinish = {},
@@ -783,6 +833,22 @@ private fun SessionContentEditingPreview() =
 @Composable
 private fun SessionContentLastPreview() =
     previewScaffold(SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 2))
+
+@Preview(showBackground = true, name = "Content — rest timer running")
+@Composable
+private fun SessionContentRestTimerPreview() =
+    previewScaffold(
+        SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0),
+        restTimer = RestTimerUi(elapsedSeconds = 65, targetSeconds = 90),
+    )
+
+@Preview(showBackground = true, name = "Content — rest timer over target")
+@Composable
+private fun SessionContentRestTimerOverPreview() =
+    previewScaffold(
+        SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0),
+        restTimer = RestTimerUi(elapsedSeconds = 105, targetSeconds = 90),
+    )
 
 @Preview(showBackground = true, name = "Content — exercise complete (advance CTA)")
 @Composable

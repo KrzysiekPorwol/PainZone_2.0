@@ -2,9 +2,10 @@ package com.painzone.ui.session
 
 import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.domain.session.Rpe
+import java.time.Instant
 
 // S9 — active workout session. M3.5 adds log-a-set UX (input row + logged list).
-// Last Set Preview (M3.6), Rest Timer (M3.7) and read-only finish (M3.10) arrive later.
+// Read-only finish (M3.10) arrives later.
 sealed interface SessionUiState {
     data object Loading : SessionUiState
 
@@ -60,7 +61,19 @@ data class LoggedSetUi(
     val reps: Int,
     val weight: Double,
     val rpe: Rpe?,
+    // When this set was saved — the rest clock for the next set starts here.
+    val completedAt: Instant = Instant.EPOCH,
 )
+
+// Rest Timer banner (S9). Count-up since the active exercise's last logged set;
+// null = no rest in progress (exercise has no set yet). Overflow alerts land in M3.8.
+data class RestTimerUi(
+    val elapsedSeconds: Int,
+    val targetSeconds: Int?,
+) {
+    // True once the planned rest is exceeded — drives the over-target accent (alerts in M3.8).
+    val isOverTarget: Boolean get() = targetSeconds != null && elapsedSeconds >= targetSeconds
+}
 
 // Input row state. editingSetId == null → next save appends; non-null → save overwrites that set.
 data class SetInputUi(
@@ -103,4 +116,10 @@ fun daysAgoLabel(days: Int): String = when {
 fun lastSetPreviewLine(preview: LastSetPreviewUi): String {
     val rpeSuffix = preview.rpe?.let { " / ${it.labelPl}" }.orEmpty()
     return "${preview.reps} × ${formatWeight(preview.weight)} kg$rpeSuffix — ${daysAgoLabel(preview.daysAgo)}"
+}
+
+// Seconds → "m:ss" (rest timer banner reads "1:05", target reads "1:30").
+fun formatRestClock(seconds: Int): String {
+    val safe = seconds.coerceAtLeast(0)
+    return "${safe / 60}:${(safe % 60).toString().padStart(2, '0')}"
 }

@@ -101,3 +101,10 @@ val MIGRATION_2_3: Migration = object : Migration(2, 3) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_logged_set_session_exercise_snapshot_id` ON `logged_set` (`session_exercise_snapshot_id`)")
     }
 }
+
+// Rest Timer (M3.7): persist the actual rest before each set instead of deriving it (ADR-0008).
+val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `logged_set` ADD COLUMN `rest_before_seconds` INTEGER")
+    }
+}

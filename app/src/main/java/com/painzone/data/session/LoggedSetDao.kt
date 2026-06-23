@@ -31,6 +31,18 @@ interface LoggedSetDao {
     @Query("SELECT MAX(order_in_exercise) FROM logged_set WHERE session_exercise_snapshot_id = :snapshotId")
     suspend fun maxOrderInSnapshot(snapshotId: Long): Int?
 
+    // completedAt of the freshest set in this exercise — the rest clock's start for the next set.
+    // Null when no set is logged yet (first set has no rest before it).
+    @Query(
+        """
+        SELECT completed_at FROM logged_set
+        WHERE session_exercise_snapshot_id = :snapshotId
+        ORDER BY order_in_exercise DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun lastCompletedAtInSnapshot(snapshotId: Long): java.time.Instant?
+
     // Pre-fill source: weight of the most recently logged set of this exercise across
     // all sessions (joined via snapshot.exercise_id). Null when the exercise has no history.
     @Query(

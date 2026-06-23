@@ -41,6 +41,32 @@ class LoggedSetTest {
         assertEquals(0.0, LoggedSet.log(1L, 1, 12, 0.0, null, now).weight, 0.0)
     }
 
+    @Test
+    fun `restBeforeSeconds defaults to null for the first set`() {
+        assertNull(LoggedSet.log(1L, 1, 10, 80.0, null, now).restBeforeSeconds)
+    }
+
+    @Test
+    fun `restBeforeSeconds is carried through log`() {
+        assertEquals(90, LoggedSet.log(1L, 2, 10, 80.0, null, now, restBeforeSeconds = 90).restBeforeSeconds)
+    }
+
+    @Test
+    fun `zero restBeforeSeconds is allowed`() {
+        assertEquals(0, LoggedSet.log(1L, 2, 10, 80.0, null, now, restBeforeSeconds = 0).restBeforeSeconds)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `negative restBeforeSeconds throws`() {
+        LoggedSet.log(1L, 2, 10, 80.0, null, now, restBeforeSeconds = -1)
+    }
+
+    @Test
+    fun `edit preserves restBeforeSeconds`() {
+        val set = LoggedSet.log(1L, 2, 10, 80.0, null, now, restBeforeSeconds = 75)
+        assertEquals(75, set.edit(reps = 8, weight = 85.0, rpe = Rpe.Hard).restBeforeSeconds)
+    }
+
     // --- init invariants ------------------------------------------------------
 
     @Test(expected = IllegalArgumentException::class)

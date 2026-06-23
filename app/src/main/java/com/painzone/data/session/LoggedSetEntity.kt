@@ -28,4 +28,5 @@ data class LoggedSetEntity(
     @ColumnInfo(name = "weight") val weight: Double,
     @ColumnInfo(name = "rpe") val rpe: Rpe?,
     @ColumnInfo(name = "completed_at") val completedAt: Instant,
+    @ColumnInfo(name = "rest_before_seconds") val restBeforeSeconds: Int? = null,
 )
