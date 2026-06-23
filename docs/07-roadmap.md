@@ -48,7 +48,7 @@ Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
 - (zrobione) **M3.5 · Log seria UX** — input reps × ciężar (stepper 0.5) × RPE chips, save ≤3s (PRD A2), auto-fokus reps po zapisie, tap świeżej serii → nadpisanie (`SessionRepository.log/edit`). Prefill reps z celu planu, ciężar przenoszony z ostatniej serii/sesji. Komplet serii → input zamienia się w CTA „Następne ćwiczenie"/„Zakończ sesję" (blokuje logowanie ponad plan). `delete` serii odłożony do M3.10.
 - (zrobione) **M3.6 · Last Set Preview** — inline per-seria: dla serii K „Ostatnio: reps × ciężar / RPE — N dni temu" z serii K ostatniej poprzedniej sesji tego ćwiczenia; brak poprzedniej sesji → „Tym planem trenujesz 1 raz."
 - (zrobione) **M3.7 · Rest Timer** — auto-start po zapisie serii (`restSeconds` z planu), `restBeforeSeconds=actual` w kolejnym `LoggedSet`. Banner count-up liczony z `completedAt` ostatniej serii (auto-reset + odporny na śmierć procesu, przygotowuje M3.9). Rest persistowany, nie derived (ADR-0008, schema v4).
-- **M3.8 · Timer overflow** — wibracja + dźwięk na przekroczenie targetu, timer dalej liczy.
+- (zrobione) **M3.8 · Timer overflow** — jednorazowa wibracja + dźwięk na przekroczenie `restSeconds`, timer liczy dalej. Detekcja przejścia pod→nad na żywo per `lastSetId` (`SessionViewModel.observeRestOverflow`) → alert dokładnie raz na odpoczynek; wznowienie do już-przekroczonego restu nie buczy (przygotowuje M3.9). Wibracja/dźwięk jako efekt platformowy poza VM (`RestAlert.kt` + `restOverflow` event). Uprawnienie `VIBRATE`.
 - **M3.9 · Pauza 30min recovery** — `InProgress` state restore po killowaniu procesu (Room + lifecycle).
 - **M3.10 · Zakończ sesję** — transition do `Completed`, read-only enforced.
 
