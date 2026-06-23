@@ -66,12 +66,15 @@ data class LoggedSetUi(
 )
 
 // Rest Timer banner (S9). Count-up since the active exercise's last logged set;
-// null = no rest in progress (exercise has no set yet). Overflow alerts land in M3.8.
+// null = no rest in progress (exercise has no set yet).
 data class RestTimerUi(
     val elapsedSeconds: Int,
     val targetSeconds: Int?,
+    // The logged set this rest follows — identifies the rest period so the overflow alert
+    // (M3.8) fires exactly once per rest, not on every tick past the target.
+    val lastSetId: Long = 0L,
 ) {
-    // True once the planned rest is exceeded — drives the over-target accent (alerts in M3.8).
+    // True once the planned rest is exceeded — drives the over-target accent + overflow alert.
     val isOverTarget: Boolean get() = targetSeconds != null && elapsedSeconds >= targetSeconds
 }
 

@@ -96,12 +96,21 @@ class SessionViewModel @Inject constructor(
             val active = (state as? SessionUiState.Content)?.activeExercise ?: return@combine null
             val lastSet = active.loggedSets.maxByOrNull { it.order } ?: return@combine null
             val elapsed = Duration.between(lastSet.completedAt, now).seconds.coerceAtLeast(0L).toInt()
-            RestTimerUi(elapsedSeconds = elapsed, targetSeconds = active.plannedRestSeconds)
+            RestTimerUi(
+                elapsedSeconds = elapsed,
+                targetSeconds = active.plannedRestSeconds,
+                lastSetId = lastSet.id,
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = null,
         )
+
+    // One-shot: the active rest just crossed its planned target — screen buzzes + plays a sound
+    // (M3.8). The timer keeps counting; this fires once per rest, on the live under→over crossing.
+    private val _restOverflow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val restOverflow: SharedFlow<Unit> = _restOverflow.asSharedFlow()
 
     private val _input = MutableStateFlow(SetInputUi())
     val input: StateFlow<SetInputUi> = _input.asStateFlow()
@@ -129,7 +138,30 @@ class SessionViewModel @Inject constructor(
                 }
             }
         }
+        observeRestOverflow()
         loadLastSetPreviews()
+    }
+
+    // Fires the overflow alert once, on a genuine under→over crossing watched live. We only alert
+    // for a rest we first saw under target — so resuming into an already-overflowed rest (M3.9)
+    // stays quiet, while every fresh rest that runs past its target buzzes exactly once.
+    private fun observeRestOverflow() {
+        viewModelScope.launch {
+            var watchedSetId: Long? = null
+            var sawUnderTarget = false
+            restTimer.collect { timer ->
+                if (timer == null) return@collect
+                if (timer.lastSetId != watchedSetId) {
+                    watchedSetId = timer.lastSetId
+                    sawUnderTarget = !timer.isOverTarget
+                } else if (!timer.isOverTarget) {
+                    sawUnderTarget = true
+                } else if (sawUnderTarget) {
+                    sawUnderTarget = false // alerted — don't repeat for this rest
+                    _restOverflow.tryEmit(Unit)
+                }
+            }
+        }
     }
 
     // Fetches each exercise's prior-session set list once; the session's exercise list is fixed.

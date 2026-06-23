@@ -94,9 +94,13 @@ fun SessionScreen(
     val input by viewModel.input.collectAsStateWithLifecycle()
     val restTimer by viewModel.restTimer.collectAsStateWithLifecycle()
     val repsFocus = remember { FocusRequester() }
+    val fireRestAlert = rememberRestAlerter()
 
     LaunchedEffect(Unit) {
         viewModel.finished.collect { onExit() }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.restOverflow.collect { fireRestAlert() }
     }
     LaunchedEffect(Unit) {
         viewModel.focusReps.collect {
@@ -315,7 +319,7 @@ private fun SessionBody(
 
 @Composable
 private fun RestTimerBanner(timer: RestTimerUi) {
-    // Over-target gets an accent here; the haptic/sound alert itself arrives in M3.8.
+    // Over-target gets an accent here; the one-shot haptic/sound alert fires from restOverflow.
     val container =
         if (timer.isOverTarget) MaterialTheme.colorScheme.tertiaryContainer
         else MaterialTheme.colorScheme.surfaceVariant
