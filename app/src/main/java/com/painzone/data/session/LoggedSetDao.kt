@@ -44,18 +44,20 @@ interface LoggedSetDao {
     )
     suspend fun lastWeightForExercise(exerciseId: Long): Double?
 
-    // Last Set Preview source: the chronologically last logged set of this exercise from any
-    // *other* session (excludes the in-progress one). Null when there is no prior history.
+    // Last Set Preview source: id of this exercise's snapshot in the most recent *prior* session
+    // (the one holding the set with the latest completed_at). Null when there is no prior history.
+    // Its full ordered set list (getBySnapshotId) backs per-series comparison — series K shows
+    // what was logged for series K last time, not the chronologically last (weakest) set.
     @Query(
         """
-        SELECT ls.reps, ls.weight, ls.rpe, ls.completed_at FROM logged_set ls
-        JOIN session_exercise_snapshot s ON ls.session_exercise_snapshot_id = s.id
+        SELECT s.id FROM session_exercise_snapshot s
+        JOIN logged_set ls ON ls.session_exercise_snapshot_id = s.id
         WHERE s.exercise_id = :exerciseId AND s.session_id != :excludingSessionId
         ORDER BY ls.completed_at DESC
         LIMIT 1
         """,
     )
-    suspend fun lastSetForExercise(exerciseId: Long, excludingSessionId: Long): LastSetRow?
+    suspend fun lastSessionSnapshotIdForExercise(exerciseId: Long, excludingSessionId: Long): Long?
 
     @Query("UPDATE logged_set SET order_in_exercise = :order WHERE id = :id")
     suspend fun updateOrder(id: Long, order: Int)

@@ -329,15 +329,22 @@ private fun ActiveExerciseCard(exercise: SessionExerciseUi) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            LastSetPreviewLine(exercise.lastSet)
+            LastSetPreviewLine(exercise)
         }
     }
 }
 
 @Composable
-private fun LastSetPreviewLine(preview: LastSetPreviewUi?) {
+private fun LastSetPreviewLine(exercise: SessionExerciseUi) {
+    // No prior session at all → first-time copy. Prior session present but this series wasn't
+    // logged then (fewer sets last time) → nothing to compare, so render nothing.
+    val text = when {
+        !exercise.hasPriorSession -> "Tym planem trenujesz 1 raz."
+        exercise.currentLastSet != null -> "Ostatnio: ${lastSetPreviewLine(exercise.currentLastSet!!)}"
+        else -> return
+    }
     Text(
-        text = if (preview == null) "Brak poprzedniej sesji" else "Ostatnio: ${lastSetPreviewLine(preview)}",
+        text = text,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 4.dp),
@@ -700,7 +707,11 @@ private val previewExercises = listOf(
             LoggedSetUi(1L, 1, 10, 60.0, Rpe.Normal),
             LoggedSetUi(2L, 2, 9, 62.5, Rpe.Hard),
         ),
-        lastSet = LastSetPreviewUi(reps = 10, weight = 60.0, rpe = Rpe.Hard, daysAgo = 3),
+        lastSession = listOf(
+            LastSetPreviewUi(reps = 10, weight = 57.5, rpe = Rpe.Normal, daysAgo = 3),
+            LastSetPreviewUi(reps = 9, weight = 60.0, rpe = Rpe.Hard, daysAgo = 3),
+            LastSetPreviewUi(reps = 8, weight = 60.0, rpe = Rpe.Hard, daysAgo = 3),
+        ),
     ),
     SessionExerciseUi(
         snapshotId = 2L,
@@ -710,7 +721,7 @@ private val previewExercises = listOf(
         plannedTargetReps = listOf(12, 12, 12),
         plannedRestSeconds = 60,
         loggedSets = emptyList(),
-        lastSet = null,
+        lastSession = emptyList(),
     ),
     SessionExerciseUi(
         snapshotId = 3L,

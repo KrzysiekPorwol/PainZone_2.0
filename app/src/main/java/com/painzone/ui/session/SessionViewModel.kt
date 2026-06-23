@@ -37,9 +37,9 @@ class SessionViewModel @Inject constructor(
     // jump/advance actions stay consistent with the rendered session graph.
     private val activeIndex = MutableStateFlow(0)
 
-    // exerciseId → Last Set Preview from a prior session. Loaded once (snapshots are immutable,
-    // and the preview excludes the current session so logging here doesn't change it).
-    private val lastSetPreviews = MutableStateFlow<Map<Long, LastSetPreviewUi>>(emptyMap())
+    // exerciseId → prior-session set list (per series) for Last Set Preview. Loaded once
+    // (snapshots are immutable, and it excludes the current session so logging never changes it).
+    private val lastSetPreviews = MutableStateFlow<Map<Long, List<LastSetPreviewUi>>>(emptyMap())
 
     val uiState: StateFlow<SessionUiState> =
         combine(
@@ -63,7 +63,7 @@ class SessionViewModel @Inject constructor(
                             loggedSets = ex.loggedSets.map { set ->
                                 LoggedSetUi(set.id, set.order, set.reps, set.weight, set.rpe)
                             },
-                            lastSet = previews[ex.snapshot.exerciseId],
+                            lastSession = previews[ex.snapshot.exerciseId].orEmpty(),
                         )
                     }
                 if (exercises.isEmpty()) {
@@ -112,7 +112,7 @@ class SessionViewModel @Inject constructor(
         loadLastSetPreviews()
     }
 
-    // Fetches each exercise's prior-session set once; the session's exercise list is fixed.
+    // Fetches each exercise's prior-session set list once; the session's exercise list is fixed.
     private fun loadLastSetPreviews() {
         viewModelScope.launch {
             val detail = repository.getSessionDetail(sessionId) ?: return@launch
@@ -120,12 +120,10 @@ class SessionViewModel @Inject constructor(
             val previews = detail.exercises
                 .map { it.snapshot.exerciseId }
                 .distinct()
-                .mapNotNull { exerciseId ->
-                    repository.lastSetForExercise(exerciseId, sessionId)?.let { last ->
-                        exerciseId to last.toUi(today)
-                    }
+                .associateWith { exerciseId ->
+                    repository.lastSessionSetsForExercise(exerciseId, sessionId).map { it.toUi(today) }
                 }
-                .toMap()
+                .filterValues { it.isNotEmpty() }
             lastSetPreviews.value = previews
         }
     }

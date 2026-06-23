@@ -25,9 +25,10 @@ interface SessionRepository {
     // logged weight for this exercise across prior sessions, or null when there is no history.
     suspend fun lastWeightForExercise(exerciseId: Long): Double?
 
-    // Last Set Preview (S9): chronologically last logged set of this exercise from a session
-    // other than the current one, or null when the exercise has no prior session.
-    suspend fun lastSetForExercise(exerciseId: Long, excludingSessionId: Long): LastSetPreview?
+    // Last Set Preview (S9): the ordered set list this exercise had in its most recent prior
+    // session (excludes the current one). Empty when the exercise has no prior session.
+    // Index = series number − 1, so series K compares against the same series last time.
+    suspend fun lastSessionSetsForExercise(exerciseId: Long, excludingSessionId: Long): List<LastSetPreview>
 
     // Appends a logged set to the snapshot (order = max+1, completedAt = now). Returns the new id.
     suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long

@@ -33,14 +33,25 @@ data class SessionExerciseUi(
     val plannedTargetReps: List<Int>,
     val plannedRestSeconds: Int?,
     val loggedSets: List<LoggedSetUi>,
-    // Last Set Preview — last set of this exercise from a prior session; null = no history.
-    val lastSet: LastSetPreviewUi? = null,
+    // Last Set Preview — this exercise's ordered sets from its most recent prior session.
+    // Index = series number − 1. Empty = no prior session.
+    val lastSession: List<LastSetPreviewUi> = emptyList(),
 ) {
     val plannedSets: Int get() = plannedTargetReps.size
     val loggedSetCount: Int get() = loggedSets.size
 
     // Only the freshest set (highest order) is editable inline — "edycja świeżej serii nadpisuje".
     val freshSetId: Long? get() = loggedSets.maxByOrNull { it.order }?.id
+
+    // True when this exercise has been trained in a prior session (drives the empty-state copy).
+    val hasPriorSession: Boolean get() = lastSession.isNotEmpty()
+
+    // Series the user is working on now (0-based), clamped to the plan — mirrors the "Seria K/L"
+    // header so the preview lines up with the series being logged.
+    val currentSetIndex: Int get() = loggedSetCount.coerceAtMost((plannedSets - 1).coerceAtLeast(0))
+
+    // Prior-session set matching the current series, or null when that series wasn't logged then.
+    val currentLastSet: LastSetPreviewUi? get() = lastSession.getOrNull(currentSetIndex)
 }
 
 data class LoggedSetUi(

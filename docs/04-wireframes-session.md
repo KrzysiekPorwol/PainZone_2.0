@@ -5,7 +5,7 @@
 ## Spec
 
 **S9** Sesja treningowa [PRD 4.3, 4.4, 4.5]
-Fields: TopBar(plan·dzień·"Ćw N/M"tap→sheet-jump-ćwiczeń-sesji) · ExerciseTitle("Nazwa · Seria K/L · cel R pow.") · LastSetPreview("reps × kg / RPE — N dni temu" · gdy-rpe-null:"reps × kg — N dni temu" · brak→"Brak poprzedniej sesji") · InputRow(reps[stepper·prefill-cel-z-planu]·kg[stepper·step0.5·prefill-ostatnia-sesja]·RPE[chips:Łatwa/Normalna/Ciężka·optional·dim-gdy-niewybrane]·[✓]Zapisz·enabled-bez-RPE) · LoggedList(odwr.chrono·tap-świeża→edycja-inline) · RestTimer(banner-bottom·mm:ss-countup·wibracja+dźwięk-po-Tplan·gdy-Tplan-null:countup-bez-alertu)
+Fields: TopBar(plan·dzień·"Ćw N/M"tap→sheet-jump-ćwiczeń-sesji) · ExerciseTitle("Nazwa · Seria K/L · cel R pow.") · LastSetPreview(per-seria: dla serii K pokazuje serię K z ostatniej poprzedniej sesji tego ćwiczenia · "Ostatnio: reps × kg / RPE — N dni temu" · gdy-rpe-null:"…reps × kg — N dni temu" · brak-poprzedniej-sesji→"Tym planem trenujesz 1 raz." · poprzednia-sesja-miała-mniej-serii→linia-ukryta) · InputRow(reps[stepper·prefill-cel-z-planu]·kg[stepper·step0.5·prefill-ostatnia-sesja]·RPE[chips:Łatwa/Normalna/Ciężka·optional·dim-gdy-niewybrane]·[✓]Zapisz·enabled-bez-RPE) · LoggedList(odwr.chrono·tap-świeża→edycja-inline) · RestTimer(banner-bottom·mm:ss-countup·wibracja+dźwięk-po-Tplan·gdy-Tplan-null:countup-bez-alertu)
 Actions: [✓]Zapisz→log+auto-RestTimer+focus-reps · [⋮]→D2 · ostatnia-seria-ćwiczenia→auto-advance+CTA"Następne ćwiczenie →" · ostatnia-seria-ostatnie-ćwiczenie→CTA"Zakończ sesję"→D2
 States: in-progress default; rest-active(timer+wibracja-po-Tplan); editing-fresh(tap-świeża→nadpisanie); paused(30min idle→banner "Wznów sesję"); empty-exercise(brak-serii→tylko-InputRow)
 
@@ -16,6 +16,8 @@ Actions: [Anuluj]→S9 · [✓]Zakończ→Completed(read-only)→S1
 ## Rationale
 
 **Auto-advance zamiast prev/next chips:** Flow F2 explicit "loop {…→następne ćwiczenie}" — sesja ma jednoznaczny kierunek. Stałe chips byłyby decyzyjnym noise w 95% serii. Cofnięcie/przeskok przez sheet w TopBar pokrywa edge-case bez kosztu tapów w głównej pętli.
+
+**LastSetPreview per-seria (nie chronologicznie ostatnia):** Wartość referencyjna to ta sama seria sprzed tygodnia — przy serii 1 masz świeże siły, więc ostatnia (najsłabsza) seria poprzedniej sesji nic nie mówi. Zestawiamy serię K z serią K, żeby user widział czy bije poprzedni wynik na tej samej pozycji.
 
 ## Referencje
 `docs/04-wireframes.md` · `docs/02-prd.md#US-3` · `docs/03-flows.md#F2` · `docs/glossary.md#RPE`

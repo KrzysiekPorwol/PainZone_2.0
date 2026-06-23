@@ -93,10 +93,16 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun lastWeightForExercise(exerciseId: Long): Double? =
         loggedSetDao.lastWeightForExercise(exerciseId)
 
-    override suspend fun lastSetForExercise(exerciseId: Long, excludingSessionId: Long): LastSetPreview? =
-        loggedSetDao.lastSetForExercise(exerciseId, excludingSessionId)?.let {
+    override suspend fun lastSessionSetsForExercise(
+        exerciseId: Long,
+        excludingSessionId: Long,
+    ): List<LastSetPreview> {
+        val snapshotId = loggedSetDao.lastSessionSnapshotIdForExercise(exerciseId, excludingSessionId)
+            ?: return emptyList()
+        return loggedSetDao.getBySnapshotId(snapshotId).map {
             LastSetPreview(reps = it.reps, weight = it.weight, rpe = it.rpe, completedAt = it.completedAt)
         }
+    }
 
     override suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long {
         val order = (loggedSetDao.maxOrderInSnapshot(snapshotId) ?: 0) + 1
