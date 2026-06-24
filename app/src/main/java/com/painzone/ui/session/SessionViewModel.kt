@@ -32,15 +32,15 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val repository: SessionRepository,
 ) : ViewModel() {
 
     private val sessionId: Long = savedStateHandle.toRoute<Session>().sessionId
 
-    // Which exercise is in focus. Kept in the VM so it survives recomposition and
-    // jump/advance actions stay consistent with the rendered session graph.
-    private val activeIndex = MutableStateFlow(0)
+    // Which exercise is in focus. Backed by SavedStateHandle so it survives process death (M3.9) —
+    // a resumed session lands on the exercise you left, not back on the first one.
+    private val activeIndex: StateFlow<Int> = savedStateHandle.getStateFlow(KEY_ACTIVE_INDEX, 0)
 
     // exerciseId → prior-session set list (per series) for Last Set Preview. Loaded once
     // (snapshots are immutable, and it excludes the current session so logging never changes it).
@@ -252,17 +252,17 @@ class SessionViewModel @Inject constructor(
     // ---- Exercise navigation (input re-prefills via the uiState collector) ----
 
     fun selectExercise(index: Int) {
-        activeIndex.value = index
+        savedStateHandle[KEY_ACTIVE_INDEX] = index
     }
 
     fun nextExercise() {
         val content = uiState.value as? SessionUiState.Content ?: return
-        if (content.hasNext) activeIndex.value = content.activeIndex + 1
+        if (content.hasNext) savedStateHandle[KEY_ACTIVE_INDEX] = content.activeIndex + 1
     }
 
     fun previousExercise() {
         val content = uiState.value as? SessionUiState.Content ?: return
-        if (content.hasPrevious) activeIndex.value = content.activeIndex - 1
+        if (content.hasPrevious) savedStateHandle[KEY_ACTIVE_INDEX] = content.activeIndex - 1
     }
 
     fun finishSession() {
@@ -303,5 +303,6 @@ class SessionViewModel @Inject constructor(
 
     private companion object {
         const val WEIGHT_STEP = 0.5
+        const val KEY_ACTIVE_INDEX = "activeIndex"
     }
 }
