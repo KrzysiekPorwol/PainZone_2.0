@@ -55,7 +55,7 @@ Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
 ### M4 · Stats Lite (US-6)
 Historia per ćwiczenie z filtrami i best set.
 - (zrobione) **M4.1 · StatsRepository** — interfejs w `domain/stats/` + impl w `data/stats/` + Hilt binding. `observeSets(exerciseId, StatsPeriod)` nad płaską projekcją `StatsSet` (seria + kontekst sesji data/plan/dzień). `StatsDao` JOIN `logged_set→snapshot→workout_session`: filtr `exercise_id`, tylko zakończone sesje, okno `since` (30d/90d/rok≈365d/all), sort najnowsza sesja→kolejność serii. JOIN przez snapshot → historia przeżywa soft-delete Exercise (M4.5); sesja w toku pominięta. Grupowanie sekcji (M4.3) i best-set 1RM (M4.4) liczone na płaskiej liście. Bez migracji (schema v4 bez zmian).
-- **M4.2 · 1RM est. formula** — Epley vs Brzycki (decyzja na start, w razie sporu → ADR), pure function w `domain/`, unit testy.
+- (zrobione) **M4.2 · 1RM est. formula** — Epley `weight × (1 + reps / 30)` (decyzja już zafiksowana w `05-domain.md`/`05-domain-session.md`, bez sporu → bez ADR), czysta `estimateOneRepMax(weight, reps)` w `domain/stats/` + rozszerzenie `StatsSet.estimatedOneRepMax()` pod best-set (M4.4). Formuła dosłownie z docs — bez special-case dla `reps==1`. Unit testy: formuła, dzielenie `Double`, masa ciała 0, monotoniczność, walidacja wejścia.
 - **M4.3 · StatsExerciseScreen** — lista 90d default + filtr chips, re-render <200ms (NFR z `08-quality.md`).
 - **M4.4 · Best set highlight** — najwyższy 1RM est. w aktualnym filtrze wyróżniony.
 - **M4.5 · Soft-deleted Exercise w historii** — marker „usunięte", read-only.
