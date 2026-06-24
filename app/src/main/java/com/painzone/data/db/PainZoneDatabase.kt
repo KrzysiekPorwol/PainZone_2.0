@@ -17,6 +17,7 @@ import com.painzone.data.session.SessionExerciseSnapshotDao
 import com.painzone.data.session.SessionExerciseSnapshotEntity
 import com.painzone.data.session.WorkoutSessionDao
 import com.painzone.data.session.WorkoutSessionEntity
+import com.painzone.data.stats.StatsDao
 
 @Database(
     entities = [
@@ -40,4 +41,5 @@ abstract class PainZoneDatabase : RoomDatabase() {
     abstract fun workoutSessionDao(): WorkoutSessionDao
     abstract fun sessionExerciseSnapshotDao(): SessionExerciseSnapshotDao
     abstract fun loggedSetDao(): LoggedSetDao
+    abstract fun statsDao(): StatsDao
 }

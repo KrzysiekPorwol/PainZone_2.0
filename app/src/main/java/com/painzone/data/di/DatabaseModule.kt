@@ -13,6 +13,7 @@ import com.painzone.data.plan.TrainingPlanDao
 import com.painzone.data.session.LoggedSetDao
 import com.painzone.data.session.SessionExerciseSnapshotDao
 import com.painzone.data.session.WorkoutSessionDao
+import com.painzone.data.stats.StatsDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,4 +56,7 @@ object DatabaseModule {
 
     @Provides
     fun provideLoggedSetDao(db: PainZoneDatabase): LoggedSetDao = db.loggedSetDao()
+
+    @Provides
+    fun provideStatsDao(db: PainZoneDatabase): StatsDao = db.statsDao()
 }
