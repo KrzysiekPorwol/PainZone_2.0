@@ -49,7 +49,7 @@ Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
 - (zrobione) **M3.6 · Last Set Preview** — inline per-seria: dla serii K „Ostatnio: reps × ciężar / RPE — N dni temu" z serii K ostatniej poprzedniej sesji tego ćwiczenia; brak poprzedniej sesji → „Tym planem trenujesz 1 raz."
 - (zrobione) **M3.7 · Rest Timer** — auto-start po zapisie serii (`restSeconds` z planu), `restBeforeSeconds=actual` w kolejnym `LoggedSet`. Banner count-up liczony z `completedAt` ostatniej serii (auto-reset + odporny na śmierć procesu, przygotowuje M3.9). Rest persistowany, nie derived (ADR-0008, schema v4).
 - (zrobione) **M3.8 · Timer overflow** — jednorazowa wibracja + dźwięk na przekroczenie `restSeconds`, timer liczy dalej. Detekcja przejścia pod→nad na żywo per `lastSetId` (`SessionViewModel.observeRestOverflow`) → alert dokładnie raz na odpoczynek; wznowienie do już-przekroczonego restu nie buczy (przygotowuje M3.9). Wibracja/dźwięk jako efekt platformowy poza VM (`RestAlert.kt` + `restOverflow` event). Uprawnienie `VIBRATE`.
-- **M3.9 · Pauza 30min recovery** — `InProgress` state restore po killowaniu procesu (Room + lifecycle).
+- (zrobione) **M3.9 · Pauza 30min recovery** — `InProgress` state restore po killowaniu procesu. `activeIndex` przeniesiony do `SavedStateHandle` (jedyny stan ginący przy śmierci procesu — serie trzyma Room, timer liczy z `completedAt`), więc wznowiona sesja wraca na ćwiczenie, które user zostawił. **Decyzja produktowa:** brak progu „30 min idle → paused" — timer odpoczynku leci bez limitu (zgodne z UX: realnie długa przerwa ma dalej liczyć). Zweryfikowane `am kill` + restart.
 - **M3.10 · Zakończ sesję** — transition do `Completed`, read-only enforced.
 
 ### M4 · Stats Lite (US-6)
