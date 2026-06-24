@@ -54,7 +54,7 @@ Sesja treningu — log ≤3s, Last Set Preview inline, Rest Timer.
 
 ### M4 · Stats Lite (US-6)
 Historia per ćwiczenie z filtrami i best set.
-- **M4.1 · StatsRepository** — query `LoggedSet` per `Exercise` z filtrami (30d/90d/rok/all).
+- (zrobione) **M4.1 · StatsRepository** — interfejs w `domain/stats/` + impl w `data/stats/` + Hilt binding. `observeSets(exerciseId, StatsPeriod)` nad płaską projekcją `StatsSet` (seria + kontekst sesji data/plan/dzień). `StatsDao` JOIN `logged_set→snapshot→workout_session`: filtr `exercise_id`, tylko zakończone sesje, okno `since` (30d/90d/rok≈365d/all), sort najnowsza sesja→kolejność serii. JOIN przez snapshot → historia przeżywa soft-delete Exercise (M4.5); sesja w toku pominięta. Grupowanie sekcji (M4.3) i best-set 1RM (M4.4) liczone na płaskiej liście. Bez migracji (schema v4 bez zmian).
 - **M4.2 · 1RM est. formula** — Epley vs Brzycki (decyzja na start, w razie sporu → ADR), pure function w `domain/`, unit testy.
 - **M4.3 · StatsExerciseScreen** — lista 90d default + filtr chips, re-render <200ms (NFR z `08-quality.md`).
 - **M4.4 · Best set highlight** — najwyższy 1RM est. w aktualnym filtrze wyróżniony.
