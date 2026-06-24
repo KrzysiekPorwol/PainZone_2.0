@@ -253,6 +253,27 @@ class SessionRepositoryImplTest {
     }
 
     @Test
+    fun `lastStartedDayId returns the most recently started day among the given days`() = runTest {
+        // Two completed sessions on different days; the newer one wins.
+        store.sessions[1L] = WorkoutSessionEntity(
+            id = 1L, plannedDayId = 10L, planNameSnapshot = "PPL", dayNameSnapshot = "Push",
+            startedAt = Instant.ofEpochSecond(100), finishedAt = Instant.ofEpochSecond(200),
+        )
+        store.sessions[2L] = WorkoutSessionEntity(
+            id = 2L, plannedDayId = 11L, planNameSnapshot = "PPL", dayNameSnapshot = "Pull",
+            startedAt = Instant.ofEpochSecond(300), finishedAt = Instant.ofEpochSecond(400),
+        )
+
+        assertEquals(11L, repo.lastStartedDayId(listOf(10L, 11L, 12L)))
+    }
+
+    @Test
+    fun `lastStartedDayId is null without matching history`() = runTest {
+        assertNull(repo.lastStartedDayId(listOf(10L, 11L)))
+        assertNull(repo.lastStartedDayId(emptyList()))
+    }
+
+    @Test
     fun `finish stamps finishedAt and frees the in-progress slot`() = runTest {
         val dayId = seedPlanDay(exercises = listOf(ExSpec()))
         val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
@@ -414,6 +435,12 @@ private class FakeWorkoutSessionDao(private val store: FakeSessionStore) : Worko
 
     override fun observeCompleted(): Flow<List<WorkoutSessionEntity>> =
         store.version.map { store.sessions.values.filter { it.finishedAt != null } }
+
+    override suspend fun lastStartedDayId(dayIds: List<Long>): Long? =
+        store.sessions.values
+            .filter { it.plannedDayId in dayIds }
+            .maxByOrNull { it.startedAt }
+            ?.plannedDayId
 
     override suspend fun isSnapshotInProgress(snapshotId: Long): Boolean {
         val sessionId = store.snapshots[snapshotId]?.sessionId ?: return false

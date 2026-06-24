@@ -45,6 +45,9 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun getSessionDetail(sessionId: Long): SessionDetail? =
         sessionDao.getWithDetail(sessionId)?.toDomain()
 
+    override suspend fun lastStartedDayId(dayIds: List<Long>): Long? =
+        if (dayIds.isEmpty()) null else sessionDao.lastStartedDayId(dayIds)
+
     override suspend fun start(plannedDayId: Long): StartSessionResult {
         if (sessionDao.getInProgress() != null) return StartSessionResult.AlreadyInProgress
         val day = dayDao.getById(plannedDayId) ?: return StartSessionResult.DayNotFound

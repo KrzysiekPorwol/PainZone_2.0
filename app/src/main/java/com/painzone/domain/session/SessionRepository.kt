@@ -12,6 +12,10 @@ interface SessionRepository {
     fun observeSessionDetail(sessionId: Long): Flow<SessionDetail?>
     suspend fun getSessionDetail(sessionId: Long): SessionDetail?
 
+    // Smart suggestion rotation anchor (S1): plannedDayId of the most recently started session
+    // among the given plan days, or null when none has been trained. Feeds suggestNextDay().
+    suspend fun lastStartedDayId(dayIds: List<Long>): Long?
+
     // Starts a session from a plan day: snapshots plan/day names and creates one
     // SessionExerciseSnapshot per planned exercise (cel z planu). Atomic; enforces ≤1 in-progress.
     suspend fun start(plannedDayId: Long): StartSessionResult

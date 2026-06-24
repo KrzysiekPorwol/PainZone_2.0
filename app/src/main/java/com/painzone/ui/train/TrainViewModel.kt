@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.painzone.domain.plan.PlanRepository
 import com.painzone.domain.session.SessionRepository
 import com.painzone.domain.session.StartSessionResult
+import com.painzone.domain.session.suggestNextDay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,12 +45,17 @@ class TrainViewModel @Inject constructor(
                     flowOf(TrainUiState.Loaded(resume = resume, activePlan = null))
                 } else {
                     planRepository.observeDaysByPlan(active.id).map { days ->
-                        val firstDay = days.minByOrNull { it.order }
+                        val ordered = days.sortedBy { it.order }
+                        // Rotation anchor = last trained day among this plan's days; recomputed on
+                        // each emission (e.g. after a session finishes the suggestion advances).
+                        val anchor = sessionRepository.lastStartedDayId(ordered.map { it.id })
+                        val suggested = suggestNextDay(ordered, anchor)
                         TrainUiState.Loaded(
                             resume = resume,
                             activePlan = ActivePlanInfo(
                                 planName = active.name,
-                                startableDay = firstDay?.let { StartableDay(it.id, it.name) },
+                                suggestedDay = suggested?.let { StartableDay(it.id, it.name) },
+                                allDays = ordered.map { StartableDay(it.id, it.name) },
                             ),
                         )
                     }
@@ -68,11 +74,10 @@ class TrainViewModel @Inject constructor(
     private val _snackbarEvents = MutableSharedFlow<String>()
     val snackbarEvents: SharedFlow<String> = _snackbarEvents.asSharedFlow()
 
-    fun onStartClick() {
-        val loaded = uiState.value as? TrainUiState.Loaded ?: return
-        val day = loaded.activePlan?.startableDay ?: return
+    // Starts a specific day — the suggested one (SmartCard "Zacznij") or any other the user picks.
+    fun onStartDay(dayId: Long) {
         viewModelScope.launch {
-            when (val result = sessionRepository.start(day.dayId)) {
+            when (val result = sessionRepository.start(dayId)) {
                 is StartSessionResult.Success -> _openSession.emit(result.sessionId)
                 // ≤1 in-progress globally: fall back to resuming the existing one.
                 StartSessionResult.AlreadyInProgress ->

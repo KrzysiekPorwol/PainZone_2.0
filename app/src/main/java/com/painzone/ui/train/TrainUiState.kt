@@ -23,8 +23,12 @@ data class ResumeInfo(
 
 data class ActivePlanInfo(
     val planName: String,
-    // First day of the plan (MIN order); null when the plan has no days yet.
-    val startableDay: StartableDay?,
+    // Smart suggestion: the day to train next (rotation after the last trained day). Null when
+    // the plan has no days yet. Always one of [allDays].
+    val suggestedDay: StartableDay?,
+    // Every day of the plan in order — each is startable, so the user can skip the rotation
+    // (e.g. jump straight to Legs after missing Push).
+    val allDays: List<StartableDay>,
 )
 
 data class StartableDay(val dayId: Long, val dayName: String)

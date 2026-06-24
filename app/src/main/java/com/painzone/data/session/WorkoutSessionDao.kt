@@ -51,6 +51,18 @@ interface WorkoutSessionDao {
     @Query("SELECT * FROM workout_session WHERE finished_at IS NOT NULL ORDER BY started_at DESC")
     fun observeCompleted(): Flow<List<WorkoutSessionEntity>>
 
+    // Rotation anchor for the smart suggestion (S1): plannedDayId of the most recently started
+    // session among the given days, or null when none of them has ever been trained.
+    @Query(
+        """
+        SELECT planned_day_id FROM workout_session
+        WHERE planned_day_id IN (:dayIds)
+        ORDER BY started_at DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun lastStartedDayId(dayIds: List<Long>): Long?
+
     // Read-only guard (M3.10): true while the snapshot's session is still in progress.
     // A finished session is read-only, so log() refuses to append to it.
     @Query(

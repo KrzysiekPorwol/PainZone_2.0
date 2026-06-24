@@ -12,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -54,7 +55,7 @@ fun TrainScreen(
         snackbarHostState = snackbarHostState,
         onManageLibrary = onManageLibrary,
         onGoToPlans = onGoToPlans,
-        onStart = viewModel::onStartClick,
+        onStartDay = viewModel::onStartDay,
         onResume = onOpenSession,
         modifier = modifier,
     )
@@ -66,7 +67,7 @@ private fun TrainScaffold(
     snackbarHostState: SnackbarHostState,
     onManageLibrary: () -> Unit,
     onGoToPlans: () -> Unit,
-    onStart: () -> Unit,
+    onStartDay: (Long) -> Unit,
     onResume: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -81,7 +82,7 @@ private fun TrainScaffold(
                 if (state.isEmpty) {
                     NoActivePlanBody(innerPadding, onGoToPlans)
                 } else {
-                    LoadedBody(state, innerPadding, onStart, onResume)
+                    LoadedBody(state, innerPadding, onStartDay, onResume)
                 }
         }
     }
@@ -132,9 +133,11 @@ private fun NoActivePlanBody(innerPadding: PaddingValues, onGoToPlans: () -> Uni
 private fun LoadedBody(
     state: TrainUiState.Loaded,
     innerPadding: PaddingValues,
-    onStart: () -> Unit,
+    onStartDay: (Long) -> Unit,
     onResume: (Long) -> Unit,
 ) {
+    // Can't start a second session while one is in progress (≤1 global).
+    val sessionInProgress = state.resume != null
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -143,9 +146,8 @@ private fun LoadedBody(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         state.resume?.let { ResumeCard(it, onResume) }
-        state.activePlan?.let {
-            // Can't start a second session while one is in progress (≤1 global).
-            ActivePlanCard(it, sessionInProgress = state.resume != null, onStart = onStart)
+        state.activePlan?.let { plan ->
+            ActivePlanCard(plan, sessionInProgress = sessionInProgress, onStartDay = onStartDay)
         }
     }
 }
@@ -188,7 +190,7 @@ private fun ResumeCard(resume: ResumeInfo, onResume: (Long) -> Unit) {
 private fun ActivePlanCard(
     plan: ActivePlanInfo,
     sessionInProgress: Boolean,
-    onStart: () -> Unit,
+    onStartDay: (Long) -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -205,26 +207,50 @@ private fun ActivePlanCard(
             Text(text = plan.planName, style = MaterialTheme.typography.titleLarge)
             val hint = when {
                 sessionInProgress -> "Zakończ bieżącą sesję, aby zacząć nową."
-                plan.startableDay != null -> "Start: ${plan.startableDay.dayName}"
-                else -> "Dodaj sesję treningową do planu, aby zacząć."
+                plan.allDays.isEmpty() -> "Dodaj sesję treningową do planu, aby zacząć."
+                else -> "Wybierz sesję do rozpoczęcia."
             }
             Text(
                 text = hint,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Button(
-                onClick = onStart,
-                enabled = !sessionInProgress && plan.startableDay != null,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Zacznij")
+            // One start button per day. The suggested day (rotation) is filled with the primary
+            // accent + "· sugerowane"; the rest are outlined so any day is one tap away.
+            plan.allDays.forEach { day ->
+                val isSuggested = day.dayId == plan.suggestedDay?.dayId
+                val label = if (isSuggested) {
+                    "Zacznij: ${day.dayName} · sugerowane"
+                } else {
+                    "Zacznij: ${day.dayName}"
+                }
+                if (isSuggested) {
+                    Button(
+                        onClick = { onStartDay(day.dayId) },
+                        enabled = !sessionInProgress,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(label) }
+                } else {
+                    OutlinedButton(
+                        onClick = { onStartDay(day.dayId) },
+                        enabled = !sessionInProgress,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(label) }
+                }
             }
         }
     }
 }
 
-private val previewPlan = ActivePlanInfo("Push/Pull/Legs", StartableDay(1L, "Push"))
+private val previewPlan = ActivePlanInfo(
+    planName = "Push/Pull/Legs",
+    suggestedDay = StartableDay(2L, "Pull"),
+    allDays = listOf(
+        StartableDay(1L, "Push"),
+        StartableDay(2L, "Pull"),
+        StartableDay(3L, "Legs"),
+    ),
+)
 
 @Preview(showBackground = true, name = "Loading")
 @Composable
