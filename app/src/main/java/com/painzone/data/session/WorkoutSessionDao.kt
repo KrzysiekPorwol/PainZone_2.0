@@ -51,6 +51,33 @@ interface WorkoutSessionDao {
     @Query("SELECT * FROM workout_session WHERE finished_at IS NOT NULL ORDER BY started_at DESC")
     fun observeCompleted(): Flow<List<WorkoutSessionEntity>>
 
+    // Read-only guard (M3.10): true while the snapshot's session is still in progress.
+    // A finished session is read-only, so log() refuses to append to it.
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1 FROM session_exercise_snapshot snap
+            JOIN workout_session s ON s.id = snap.session_id
+            WHERE snap.id = :snapshotId AND s.finished_at IS NULL
+        )
+        """,
+    )
+    suspend fun isSnapshotInProgress(snapshotId: Long): Boolean
+
+    // Read-only guard (M3.10): true while the set's owning session is still in progress,
+    // so edit() refuses to overwrite a set once the session is finished.
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1 FROM logged_set ls
+            JOIN session_exercise_snapshot snap ON snap.id = ls.session_exercise_snapshot_id
+            JOIN workout_session s ON s.id = snap.session_id
+            WHERE ls.id = :setId AND s.finished_at IS NULL
+        )
+        """,
+    )
+    suspend fun isSetInProgress(setId: Long): Boolean
+
     @Transaction
     @Query("SELECT * FROM workout_session WHERE id = :id")
     suspend fun getWithSnapshots(id: Long): SessionWithSnapshots?

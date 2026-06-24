@@ -79,6 +79,7 @@ class SessionViewModel @Inject constructor(
                         dayName = detail.session.dayNameSnapshot,
                         exercises = exercises,
                         activeIndex = index.coerceIn(0, exercises.lastIndex),
+                        startedAt = detail.session.startedAt,
                     )
                 }
             }

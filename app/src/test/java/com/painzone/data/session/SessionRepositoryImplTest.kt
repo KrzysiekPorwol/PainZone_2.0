@@ -14,6 +14,7 @@ import com.painzone.data.session.relation.SessionWithDetail
 import com.painzone.data.session.relation.SessionWithSnapshots
 import com.painzone.data.session.relation.SnapshotWithLoggedSets
 import com.painzone.domain.exercise.MuscleGroup
+import com.painzone.domain.session.FinishSessionResult
 import com.painzone.domain.session.StartSessionResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -251,6 +253,58 @@ class SessionRepositoryImplTest {
     }
 
     @Test
+    fun `finish stamps finishedAt and frees the in-progress slot`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+        val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
+
+        assertEquals(FinishSessionResult.Success, repo.finish(id))
+        assertNotNull(store.sessions[id]!!.finishedAt)
+        assertNull(repo.getInProgress())
+    }
+
+    @Test
+    fun `finish is idempotent — a finished session reports AlreadyFinished`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+        val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
+        repo.finish(id)
+
+        assertEquals(FinishSessionResult.AlreadyFinished, repo.finish(id))
+    }
+
+    @Test
+    fun `finish returns NotFound for an unknown session`() = runTest {
+        assertEquals(FinishSessionResult.NotFound, repo.finish(999L))
+    }
+
+    @Test
+    fun `log is refused once the session is finished (read-only)`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+        val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
+        val snapId = store.snapshots.values.first { it.sessionId == id }.id
+        repo.finish(id)
+
+        val setId = repo.log(snapId, reps = 10, weight = 60.0, rpe = null)
+
+        assertEquals(-1L, setId)
+        assertTrue(store.sets.isEmpty())
+    }
+
+    @Test
+    fun `edit is refused once the session is finished (read-only)`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+        val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
+        val snapId = store.snapshots.values.first { it.sessionId == id }.id
+        val setId = repo.log(snapId, reps = 10, weight = 60.0, rpe = null)
+        repo.finish(id)
+
+        repo.edit(setId, reps = 12, weight = 80.0, rpe = null)
+
+        val set = store.sets[setId]!!
+        assertEquals(10, set.reps)
+        assertEquals(60.0, set.weight, 0.0)
+    }
+
+    @Test
     fun `lastSessionSetsForExercise is empty when only the current session has sets`() = runTest {
         val exId = exerciseDao.seed("Squat", MuscleGroup.Legs)
         val currentSnap = store.seedSnapshot(sessionId = 2L, exerciseId = exId)
@@ -360,6 +414,16 @@ private class FakeWorkoutSessionDao(private val store: FakeSessionStore) : Worko
 
     override fun observeCompleted(): Flow<List<WorkoutSessionEntity>> =
         store.version.map { store.sessions.values.filter { it.finishedAt != null } }
+
+    override suspend fun isSnapshotInProgress(snapshotId: Long): Boolean {
+        val sessionId = store.snapshots[snapshotId]?.sessionId ?: return false
+        return store.sessions[sessionId]?.finishedAt == null
+    }
+
+    override suspend fun isSetInProgress(setId: Long): Boolean {
+        val snapshotId = store.sets[setId]?.sessionExerciseSnapshotId ?: return false
+        return isSnapshotInProgress(snapshotId)
+    }
 
     override suspend fun getWithSnapshots(id: Long): SessionWithSnapshots? =
         throw NotImplementedError()

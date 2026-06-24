@@ -65,6 +65,7 @@ import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.domain.session.Rpe
 import com.painzone.ui.library.labelPl
 import com.painzone.ui.theme.PainZoneTheme
+import java.time.Instant
 
 // Action handlers for the input row — bundled so previews and the scaffold stay readable.
 data class SessionInputCallbacks(
@@ -181,8 +182,9 @@ private fun SessionScaffold(
         }
     }
 
-    if (showFinishDialog) {
+    if (showFinishDialog && state is SessionUiState.Content) {
         FinishSessionDialog(
+            content = state,
             onConfirm = {
                 showFinishDialog = false
                 onFinish()
@@ -653,11 +655,32 @@ private fun ExerciseNavRow(
 }
 
 @Composable
-private fun FinishSessionDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun FinishSessionDialog(
+    content: SessionUiState.Content,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    // Elapsed time is captured once when the dialog opens, not re-ticked while it's up.
+    val summary = remember(content) { content.finishSummary(Instant.now()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Zakończyć sesję?") },
-        text = { Text("Sesja zostanie zapisana jako zakończona. Możesz to zrobić nawet w połowie planu.") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(finishSummaryLine(summary))
+                if (summary.unfinishedExercises > 0) {
+                    Text(
+                        text = "Niezakończone ćwiczenia: ${summary.unfinishedExercises}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    text = "Sesja zostanie zapisana jako zakończona — bez możliwości edycji.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
         confirmButton = { TextButton(onClick = onConfirm) { Text("Zakończ") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj") } },
     )
@@ -853,6 +876,26 @@ private fun SessionContentRestTimerOverPreview() =
         SessionUiState.Content("Push/Pull/Legs", "Push", previewExercises, 0),
         restTimer = RestTimerUi(elapsedSeconds = 105, targetSeconds = 90),
     )
+
+@Preview(showBackground = true, name = "Finish dialog — D2 summary")
+@Composable
+private fun FinishDialogPreview() {
+    PainZoneTheme {
+        Surface {
+            FinishSessionDialog(
+                content = SessionUiState.Content(
+                    planName = "Push/Pull/Legs",
+                    dayName = "Push",
+                    exercises = previewExercises,
+                    activeIndex = 0,
+                    startedAt = Instant.now().minusSeconds(65 * 60),
+                ),
+                onConfirm = {},
+                onDismiss = {},
+            )
+        }
+    }
+}
 
 @Preview(showBackground = true, name = "Content — exercise complete (advance CTA)")
 @Composable

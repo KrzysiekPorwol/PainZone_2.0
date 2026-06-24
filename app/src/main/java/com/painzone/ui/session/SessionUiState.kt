@@ -2,6 +2,7 @@ package com.painzone.ui.session
 
 import com.painzone.domain.exercise.MuscleGroup
 import com.painzone.domain.session.Rpe
+import java.time.Duration
 import java.time.Instant
 
 // S9 — active workout session. M3.5 adds log-a-set UX (input row + logged list).
@@ -17,14 +18,35 @@ sealed interface SessionUiState {
         val dayName: String,
         val exercises: List<SessionExerciseUi>,
         val activeIndex: Int,
+        // When the session started — backs the elapsed-time line in the finish summary (D2).
+        val startedAt: Instant = Instant.EPOCH,
     ) : SessionUiState {
         val activeExercise: SessionExerciseUi get() = exercises[activeIndex]
         val exerciseCount: Int get() = exercises.size
         val position: Int get() = activeIndex + 1
         val hasNext: Boolean get() = activeIndex < exercises.lastIndex
         val hasPrevious: Boolean get() = activeIndex > 0
+
+        // D2 finish dialog summary, computed against [now] (elapsed time is captured on open).
+        fun finishSummary(now: Instant): FinishSummary {
+            val elapsed = Duration.between(startedAt, now).seconds.coerceAtLeast(0L)
+            return FinishSummary(
+                totalSets = exercises.sumOf { it.loggedSetCount },
+                elapsedSeconds = elapsed,
+                tonnage = exercises.sumOf { ex -> ex.loggedSets.sumOf { it.reps * it.weight } },
+                unfinishedExercises = exercises.count { it.loggedSetCount < it.plannedSets },
+            )
+        }
     }
 }
+
+// D2 finish summary (S9): totals shown before confirming the session is done.
+data class FinishSummary(
+    val totalSets: Int,
+    val elapsedSeconds: Long,
+    val tonnage: Double,
+    val unfinishedExercises: Int,
+)
 
 data class SessionExerciseUi(
     val snapshotId: Long,
@@ -126,3 +148,32 @@ fun formatRestClock(seconds: Int): String {
     val safe = seconds.coerceAtLeast(0)
     return "${safe / 60}:${(safe % 60).toString().padStart(2, '0')}"
 }
+
+// Polish count form of "seria" (1 seria · 3 serie · 12 serii) for the finish summary.
+fun polishSets(n: Int): String {
+    val word = when {
+        n == 1 -> "seria"
+        n % 100 in 12..14 -> "serii"
+        n % 10 in 2..4 -> "serie"
+        else -> "serii"
+    }
+    return "$n $word"
+}
+
+// Session length → "1 godz 5 min" / "45 min" / "<1 min" for the finish summary.
+fun formatSessionDuration(seconds: Long): String {
+    val safe = seconds.coerceAtLeast(0L)
+    val hours = safe / 3600
+    val minutes = (safe % 3600) / 60
+    return when {
+        hours > 0 && minutes > 0 -> "$hours godz $minutes min"
+        hours > 0 -> "$hours godz"
+        minutes > 0 -> "$minutes min"
+        else -> "<1 min"
+    }
+}
+
+// "N serii · czas Y · tonaż Z kg" — the top line of the D2 finish dialog.
+fun finishSummaryLine(summary: FinishSummary): String =
+    "${polishSets(summary.totalSets)} · czas ${formatSessionDuration(summary.elapsedSeconds)} · " +
+        "tonaż ${formatWeight(summary.tonnage)} kg"

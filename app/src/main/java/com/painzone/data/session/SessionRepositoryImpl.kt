@@ -106,6 +106,8 @@ class SessionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun log(snapshotId: Long, reps: Int, weight: Double, rpe: Rpe?): Long {
+        // Read-only enforcement: a finished session takes no new sets (M3.10).
+        if (!sessionDao.isSnapshotInProgress(snapshotId)) return -1L
         val now = Instant.now()
         val order = (loggedSetDao.maxOrderInSnapshot(snapshotId) ?: 0) + 1
         // Actual rest = now − previous set's completedAt (the rest clock started when it was saved).
@@ -118,6 +120,8 @@ class SessionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun edit(setId: Long, reps: Int, weight: Double, rpe: Rpe?) {
+        // Read-only enforcement: sets of a finished session can't be overwritten (M3.10).
+        if (!sessionDao.isSetInProgress(setId)) return
         val existing = loggedSetDao.getById(setId)?.toDomain() ?: return
         loggedSetDao.update(existing.edit(reps, weight, rpe).toEntity())
     }
