@@ -15,6 +15,7 @@ import com.painzone.ui.plans.detail.ExercisePickerScreen
 import com.painzone.ui.plans.detail.PlanDetailScreen
 import com.painzone.ui.progress.ProgressScreen
 import com.painzone.ui.session.SessionScreen
+import com.painzone.ui.stats.StatsExerciseScreen
 import com.painzone.ui.train.TrainScreen
 
 @Composable
@@ -50,7 +51,14 @@ fun PainZoneNavHost(
                 onOpenPlan = { planId -> navController.navigate(PlanDetail(planId)) },
             )
         }
-        composable<Progress> { ProgressScreen(onManageLibrary = onManageLibrary) }
+        composable<Progress> {
+            ProgressScreen(
+                onManageLibrary = onManageLibrary,
+                onOpenStats = { exerciseId, name, muscleGroupLabel ->
+                    navController.navigate(StatsExercise(exerciseId, name, muscleGroupLabel))
+                },
+            )
+        }
         composable<Library> { LibraryScreen(onBack = { navController.popBackStack() }) }
         composable<PlanCreate> {
             PlanCreateScreen(
@@ -82,6 +90,14 @@ fun PainZoneNavHost(
         }
         composable<Session> {
             SessionScreen(onExit = { navController.popBackStack() })
+        }
+        composable<StatsExercise> { backStackEntry ->
+            val args = backStackEntry.toRoute<StatsExercise>()
+            StatsExerciseScreen(
+                exerciseName = args.exerciseName,
+                muscleGroupLabel = args.muscleGroupLabel,
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }

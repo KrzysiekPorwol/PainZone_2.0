@@ -33,3 +33,13 @@ data class ExercisePicker(val dayId: Long) : Route
 // S9 — active workout session. Focus mode: bottom bar hidden while on this route.
 @Serializable
 data class Session(val sessionId: Long) : Route
+
+// S10 — Stats Lite for one exercise. Name + muscle group label are carried in the route
+// (like DayDetail) so the title is stable and survives a soft-deleted exercise (M4.5),
+// avoiding a lookup query that wouldn't find a deleted one.
+@Serializable
+data class StatsExercise(
+    val exerciseId: Long,
+    val exerciseName: String,
+    val muscleGroupLabel: String,
+) : Route
