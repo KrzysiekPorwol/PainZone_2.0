@@ -14,10 +14,11 @@ Fields: PlanList(card:"N dni·ostatnio Xd"·⭐-badge-gdy-aktywny·tap→S4) · 
 Actions: [⋮]→S7/S11
 States: loaded; empty→CTA→S4
 
-**S3** Postęp [PRD 4.6]
-Fields: ExerciseList(card:"Grupa·ostatnio Xd"·tap→S10)
+**S3** Postęp [PRD 4.6] — hub wyboru trybu
+Fields: HubChoices(3 karty: "Po ćwiczeniu"→ExerciseList→S10 · "Po planie"→S12 · "Chronologicznie"→S13)
 Actions: [⋮]→S7/S11
-States: loaded; empty→"Brak historii — zakończ pierwszą sesję"
+States: loaded; empty(brak zakończonych sesji)→"Brak historii — zakończ pierwszą sesję" (wszystkie 3 tryby puste)
+Uwaga: ExerciseList ("Po ćwiczeniu", card:"Grupa") = lista ćwiczeń z M4.3 → S10; tu staje się podekranem huba.
 
 ## Referencje
 `docs/04-wireframes.md`

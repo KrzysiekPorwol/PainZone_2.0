@@ -1,6 +1,6 @@
 # User Flows + IA — PainZone 2.0
 
-> TL;DR: 3 zakładki (Trenuj/Plany/Postęp), 11 ekranów, 3 modale (M1-M3) + 3 dialogi (D1-D3), 4 top flowy. Zatwierdzony 2026-05-26.
+> TL;DR: 3 zakładki (Trenuj/Plany/Postęp), 14 ekranów, 3 modale (M1-M3) + 3 dialogi (D1-D3), 4 top flowy. Zatwierdzony 2026-05-26 (historia po planie: 2026-06-25).
 
 ## Spec
 
@@ -22,7 +22,7 @@
 |----|-------|---------|--------------|-----|
 | S1 | Trenuj | Smart suggestion + lista | Tab → S9 / S4 (empty CTA) | US-3 |
 | S2 | Plany | Lista planów + CRUD | Tab → S4 | US-2 |
-| S3 | Postęp | Lista ćwiczeń z historią | Tab → S10 | US-6 |
+| S3 | Postęp | Hub: 3 tryby historii | Tab → S10/S12/S13 | US-6 |
 | S4 | Edycja planu | CRUD planu + dni | S2 → S5 · back S2 | US-2 |
 | S5 | Edycja dnia | CRUD dnia + ćwiczenia | S4 → S6/M2 · back S4 | US-2 |
 | S6 | Picker ćwiczenia | Wybór z biblioteki + inline add | S5 → S5 / M3 | US-1 |
@@ -31,6 +31,9 @@
 | S9 | Sesja treningowa | Log serii + Last Set + Rest Timer | S1 / banner → D2 → S1 | US-3, US-4, US-5 |
 | S10 | Stats Lite | Lista + filtr + best set | S3 → back | US-6 |
 | S11 | Ustawienia | About + reset | Overflow → back | — |
+| S12 | Wybór planu | Picker planu do historii | S3 → S13 | US-6 |
+| S13 | Historia sesji | Lista sesji + filtr planu | S3/S12 → S14 | US-6 |
+| S14 | Szczegóły sesji | Read-only snapshot sesji | S13 → back | US-6 |
 
 ### Modale / dialogi
 
@@ -48,7 +51,10 @@ S1 brak planów → CTA "Stwórz pierwszy plan" → S4 · S2 pusto → ten sam C
 
 **F3 · Stwórz/edytuj plan:** S2 → +nowy/tap → S4 (nazwa · ⭐Aktywuj plan · dni: + / reorder / usuń / tap → S5) → S5 (ćwiczenie: + → S6 / tap → M2 / reorder / usuń) → S6 (z biblioteki → S5 / +nowe → M3 → S5) → back chain S5→S4→S2.
 
-**F4 · Zobacz progres:** S3 → historia? → [nie: empty → S1/S2] / [tak: lista → tap → S10 (lista + filtr 90d default + best set highlighted) → filtr 30d/90d/rok/wszystko / usunięte = read-only marker] → back.
+**F4 · Zobacz progres/historię:** S3 hub → [brak sesji: empty → S1/S2] / wybór trybu:
+- *Po ćwiczeniu* → lista ćwiczeń → S10 (filtr 90d default + best set highlighted / 30d/90d/rok/wszystko / usunięte = read-only marker) → back.
+- *Po planie* → S12 (wybór planu) → S13 (sesje tego planu, filtr planu przełączalny) → tap → S14 (read-only snapshot) → back.
+- *Chronologicznie* → S13 (wszystkie sesje) → tap → S14 → back.
 
 ## Rationale
 

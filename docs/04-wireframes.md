@@ -1,6 +1,6 @@
 # Wireframes — PainZone 2.0
 
-> TL;DR: Master index — checklist 11 ekranów + 6 modali, linki do modułów per sekcja.
+> TL;DR: Master index — checklist 14 ekranów + 6 modali, linki do modułów per sekcja.
 
 **Konwencja:** `→` = nawigacja · `·` = separator · `dirty` = niezapisane zmiany
 
@@ -10,7 +10,7 @@
 |----|-------|--------|-------|
 | S1 | Trenuj | ✅ | [toplevel](04-wireframes-toplevel.md) |
 | S2 | Plany | ✅ | [toplevel](04-wireframes-toplevel.md) |
-| S3 | Postęp | ✅ | [toplevel](04-wireframes-toplevel.md) |
+| S3 | Postęp (hub) | ✅ | [toplevel](04-wireframes-toplevel.md) |
 | S4 | Edycja planu | ✅ | [crud](04-wireframes-crud.md) |
 | S5 | Edycja dnia | ✅ | [crud](04-wireframes-crud.md) |
 | S6 | Picker ćwiczenia | ✅ | [crud](04-wireframes-crud.md) |
@@ -25,6 +25,9 @@
 | S11 | Ustawienia | ✅ | [misc](04-wireframes-misc.md) |
 | D1 | Dialog usunięcia | ✅ | [misc](04-wireframes-misc.md) |
 | D3 | Reset danych | ✅ | [misc](04-wireframes-misc.md) |
+| S12 | Wybór planu | ✅ | [history](04-wireframes-history.md) |
+| S13 | Historia sesji | ✅ | [history](04-wireframes-history.md) |
+| S14 | Szczegóły sesji | ✅ | [history](04-wireframes-history.md) |
 
 ## Bottom bar — spec stylowania
 
