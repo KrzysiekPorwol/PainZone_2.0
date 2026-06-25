@@ -18,6 +18,15 @@ data object Progress : Route
 @Serializable
 data object ProgressByExercise : Route
 
+// S12 — "Po planie": plan picker (plans with ≥1 finished session) → S13 filtered by plan.
+@Serializable
+data object SessionPlanPicker : Route
+
+// S13 — session history list. planNameFilter null = "Chronologicznie" (all sessions);
+// a value preselects the plan filter ("Po planie" entry via S12). Switchable in-screen.
+@Serializable
+data class SessionHistory(val planNameFilter: String? = null) : Route
+
 @Serializable
 data object Library : Route
 

@@ -136,17 +136,13 @@ private fun HubChoices(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             title = "Po planie",
             subtitle = "Sesje pogrupowane planem treningowym",
-            // S12 — wired in M5.2.
             onClick = onByPlan,
-            enabled = false,
         )
         HubCard(
             icon = Icons.Filled.CalendarMonth,
             title = "Chronologicznie",
             subtitle = "Wszystkie sesje od najnowszej",
-            // S13 — wired in M5.2.
             onClick = onChronological,
-            enabled = false,
         )
     }
 }

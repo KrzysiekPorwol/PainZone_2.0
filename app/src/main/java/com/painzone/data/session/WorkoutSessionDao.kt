@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.painzone.data.session.relation.CompletedSessionRow
 import com.painzone.data.session.relation.SessionWithDetail
 import com.painzone.data.session.relation.SessionWithSnapshots
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +55,37 @@ interface WorkoutSessionDao {
     // S3 hub empty state: true once at least one session has been finished.
     @Query("SELECT EXISTS(SELECT 1 FROM workout_session WHERE finished_at IS NOT NULL)")
     fun observeHasCompleted(): Flow<Boolean>
+
+    // S13 history list: finished sessions newest→oldest with aggregated set count + tonnage.
+    // LEFT JOIN keeps sessions that logged nothing. :planNameFilter NULL = no plan filter.
+    @Query(
+        """
+        SELECT s.id AS id,
+               s.plan_name_snapshot AS plan_name_snapshot,
+               s.day_name_snapshot AS day_name_snapshot,
+               s.started_at AS started_at,
+               COUNT(ls.id) AS set_count,
+               COALESCE(SUM(ls.reps * ls.weight), 0) AS tonnage
+        FROM workout_session s
+        LEFT JOIN session_exercise_snapshot snap ON snap.session_id = s.id
+        LEFT JOIN logged_set ls ON ls.session_exercise_snapshot_id = snap.id
+        WHERE s.finished_at IS NOT NULL
+          AND (:planNameFilter IS NULL OR s.plan_name_snapshot = :planNameFilter)
+        GROUP BY s.id
+        ORDER BY s.started_at DESC
+        """,
+    )
+    fun observeCompleted(planNameFilter: String?): Flow<List<CompletedSessionRow>>
+
+    // S12 plan picker: distinct plan names among finished sessions (by snapshot, alphabetical).
+    @Query(
+        """
+        SELECT DISTINCT plan_name_snapshot FROM workout_session
+        WHERE finished_at IS NOT NULL
+        ORDER BY plan_name_snapshot COLLATE NOCASE
+        """,
+    )
+    fun observeSessionPlanNames(): Flow<List<String>>
 
     // Rotation anchor for the smart suggestion (S1): plannedDayId of the most recently started
     // session among the given days, or null when none of them has ever been trained.

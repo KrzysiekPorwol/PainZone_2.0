@@ -13,6 +13,8 @@ import androidx.navigation.toRoute
 import com.painzone.ui.plans.detail.DayDetailScreen
 import com.painzone.ui.plans.detail.ExercisePickerScreen
 import com.painzone.ui.plans.detail.PlanDetailScreen
+import com.painzone.ui.history.SessionHistoryScreen
+import com.painzone.ui.history.SessionPlanPickerScreen
 import com.painzone.ui.progress.ProgressByExerciseScreen
 import com.painzone.ui.progress.ProgressHubScreen
 import com.painzone.ui.session.SessionScreen
@@ -56,9 +58,8 @@ fun PainZoneNavHost(
             ProgressHubScreen(
                 onManageLibrary = onManageLibrary,
                 onByExercise = { navController.navigate(ProgressByExercise) },
-                // S12 / S13 land in M5.2 — cards are shown disabled ("Wkrótce") until then.
-                onByPlan = {},
-                onChronological = {},
+                onByPlan = { navController.navigate(SessionPlanPicker) },
+                onChronological = { navController.navigate(SessionHistory()) },
             )
         }
         composable<ProgressByExercise> {
@@ -67,6 +68,19 @@ fun PainZoneNavHost(
                 onOpenStats = { exerciseId, name, muscleGroupLabel ->
                     navController.navigate(StatsExercise(exerciseId, name, muscleGroupLabel))
                 },
+            )
+        }
+        composable<SessionPlanPicker> {
+            SessionPlanPickerScreen(
+                onBack = { navController.popBackStack() },
+                onSelectPlan = { planName -> navController.navigate(SessionHistory(planName)) },
+            )
+        }
+        composable<SessionHistory> {
+            SessionHistoryScreen(
+                onBack = { navController.popBackStack() },
+                // S14 read-only session detail lands in M5.3.
+                onOpenSession = {},
             )
         }
         composable<Library> { LibraryScreen(onBack = { navController.popBackStack() }) }

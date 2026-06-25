@@ -4,7 +4,9 @@ import com.painzone.data.plan.PlannedDayDao
 import com.painzone.data.plan.PlannedExerciseDao
 import com.painzone.data.plan.TrainingPlanDao
 import com.painzone.data.exercise.ExerciseDao
+import com.painzone.data.session.relation.CompletedSessionRow
 import com.painzone.data.session.relation.SessionWithDetail
+import com.painzone.domain.session.CompletedSession
 import com.painzone.domain.session.SessionDetail
 import com.painzone.domain.session.SessionExerciseDetail
 import com.painzone.domain.session.SessionExerciseSnapshot
@@ -41,6 +43,12 @@ class SessionRepositoryImpl @Inject constructor(
 
     override fun observeHasCompletedSessions(): Flow<Boolean> =
         sessionDao.observeHasCompleted()
+
+    override fun observeCompleted(planNameFilter: String?): Flow<List<CompletedSession>> =
+        sessionDao.observeCompleted(planNameFilter).map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeSessionPlanNames(): Flow<List<String>> =
+        sessionDao.observeSessionPlanNames()
 
     override fun observeSessionDetail(sessionId: Long): Flow<SessionDetail?> =
         sessionDao.observeWithDetail(sessionId).map { it?.toDomain() }
@@ -131,6 +139,15 @@ class SessionRepositoryImpl @Inject constructor(
         val existing = loggedSetDao.getById(setId)?.toDomain() ?: return
         loggedSetDao.update(existing.edit(reps, weight, rpe).toEntity())
     }
+
+    private fun CompletedSessionRow.toDomain(): CompletedSession = CompletedSession(
+        sessionId = id,
+        planNameSnapshot = planNameSnapshot,
+        dayNameSnapshot = dayNameSnapshot,
+        startedAt = startedAt,
+        setCount = setCount,
+        tonnage = tonnage,
+    )
 
     private fun SessionWithDetail.toDomain(): SessionDetail = SessionDetail(
         session = session.toDomain(),

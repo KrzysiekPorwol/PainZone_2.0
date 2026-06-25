@@ -12,6 +12,14 @@ interface SessionRepository {
     // (no completed sessions → all three history modes are empty).
     fun observeHasCompletedSessions(): Flow<Boolean>
 
+    // S13 Historia sesji: finished sessions newest→oldest, each with set count + tonnage.
+    // planNameFilter null = all plans; otherwise only sessions whose plan_name_snapshot matches.
+    fun observeCompleted(planNameFilter: String?): Flow<List<CompletedSession>>
+
+    // S12 plan picker: distinct plan_name_snapshot among finished sessions (alphabetical).
+    // Plan is a name snapshot, not an FK — history stays stable after a plan is renamed/deleted.
+    fun observeSessionPlanNames(): Flow<List<String>>
+
     // Full session graph (snapshots + logged sets) for the session screen and resume restore.
     fun observeSessionDetail(sessionId: Long): Flow<SessionDetail?>
     suspend fun getSessionDetail(sessionId: Long): SessionDetail?
@@ -46,6 +54,17 @@ interface SessionRepository {
     // No-op when the set no longer exists or its session is finished (read-only). Order/completedAt kept.
     suspend fun edit(setId: Long, reps: Int, weight: Double, rpe: Rpe?)
 }
+
+// One finished session as a S13 history card: "DD.MM · Plan · Dzień · N serii · tonaż Z kg".
+// Names are snapshots from the moment of the session (survive plan/exercise rename/delete).
+data class CompletedSession(
+    val sessionId: Long,
+    val planNameSnapshot: String,
+    val dayNameSnapshot: String,
+    val startedAt: java.time.Instant,
+    val setCount: Int,
+    val tonnage: Double,
+)
 
 data class SessionDetail(
     val session: WorkoutSession,

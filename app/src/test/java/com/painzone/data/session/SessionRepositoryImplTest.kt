@@ -10,6 +10,7 @@ import com.painzone.data.plan.TrainingPlanDao
 import com.painzone.data.plan.TrainingPlanEntity
 import com.painzone.data.plan.relation.PlanSummaryRow
 import com.painzone.data.plan.relation.PlanWithDays
+import com.painzone.data.session.relation.CompletedSessionRow
 import com.painzone.data.session.relation.SessionWithDetail
 import com.painzone.data.session.relation.SessionWithSnapshots
 import com.painzone.data.session.relation.SnapshotWithLoggedSets
@@ -346,6 +347,66 @@ class SessionRepositoryImplTest {
 
         assertTrue(repo.lastSessionSetsForExercise(exId, excludingSessionId = 2L).isEmpty())
     }
+
+    @Test
+    fun `observeCompleted aggregates set count and tonnage and excludes in-progress`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+        val finishedId = (repo.start(dayId) as StartSessionResult.Success).sessionId
+        val snap = store.snapshots.values.first { it.sessionId == finishedId }.id
+        repo.log(snap, reps = 10, weight = 100.0, rpe = null) // 1000
+        repo.log(snap, reps = 8, weight = 50.0, rpe = null)   // 400
+        repo.finish(finishedId)
+
+        // A second, still in-progress session must not appear.
+        repo.start(dayId)
+
+        val completed = repo.observeCompleted(null).first()
+        assertEquals(1, completed.size)
+        assertEquals(finishedId, completed[0].sessionId)
+        assertEquals(2, completed[0].setCount)
+        assertEquals(1400.0, completed[0].tonnage, 0.0)
+    }
+
+    @Test
+    fun `observeCompleted with no sets reports zero count and tonnage`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+        val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
+        repo.finish(id)
+
+        val completed = repo.observeCompleted(null).first()
+        assertEquals(1, completed.size)
+        assertEquals(0, completed[0].setCount)
+        assertEquals(0.0, completed[0].tonnage, 0.0)
+    }
+
+    @Test
+    fun `observeCompleted sorts newest-first and filters by plan name`() = runTest {
+        val pplDay = seedPlanDay(planName = "PPL", dayName = "Push", exercises = listOf(ExSpec()))
+        val fbDay = seedPlanDay(planName = "Full Body", dayName = "A", exercises = listOf(ExSpec()))
+        val older = (repo.start(pplDay) as StartSessionResult.Success).sessionId
+        repo.finish(older)
+        val newer = (repo.start(fbDay) as StartSessionResult.Success).sessionId
+        repo.finish(newer)
+        // Pin distinct startedAt so ordering is deterministic regardless of clock resolution.
+        store.sessions[older] = store.sessions[older]!!.copy(startedAt = Instant.ofEpochSecond(100))
+        store.sessions[newer] = store.sessions[newer]!!.copy(startedAt = Instant.ofEpochSecond(200))
+        store.bump()
+
+        assertEquals(listOf(newer, older), repo.observeCompleted(null).first().map { it.sessionId })
+        assertEquals(listOf(older), repo.observeCompleted("PPL").first().map { it.sessionId })
+    }
+
+    @Test
+    fun `observeSessionPlanNames returns distinct finished plan names and ignores in-progress`() = runTest {
+        val pplDay = seedPlanDay(planName = "PPL", dayName = "Push", exercises = listOf(ExSpec()))
+        val fbDay = seedPlanDay(planName = "Full Body", dayName = "A", exercises = listOf(ExSpec()))
+        repo.finish((repo.start(pplDay) as StartSessionResult.Success).sessionId)
+        repo.finish((repo.start(pplDay) as StartSessionResult.Success).sessionId) // same plan twice
+        repo.finish((repo.start(fbDay) as StartSessionResult.Success).sessionId)
+        repo.start(pplDay) // in-progress — already counted, but must not double-list
+
+        assertEquals(listOf("Full Body", "PPL"), repo.observeSessionPlanNames().first())
+    }
 }
 
 // Shared in-memory store mimicking the three session tables + reactive bump.
@@ -451,6 +512,39 @@ private class FakeWorkoutSessionDao(private val store: FakeSessionStore) : Worko
 
     override fun observeHasCompleted(): Flow<Boolean> =
         store.version.map { store.sessions.values.any { it.finishedAt != null } }
+
+    override fun observeCompleted(planNameFilter: String?): Flow<List<CompletedSessionRow>> =
+        store.version.map {
+            store.sessions.values
+                .filter { it.finishedAt != null }
+                .filter { planNameFilter == null || it.planNameSnapshot == planNameFilter }
+                .sortedByDescending { it.startedAt }
+                .map { session ->
+                    val snapshotIds = store.snapshots.values
+                        .filter { it.sessionId == session.id }
+                        .map { it.id }
+                        .toSet()
+                    val sets = store.sets.values
+                        .filter { it.sessionExerciseSnapshotId in snapshotIds }
+                    CompletedSessionRow(
+                        id = session.id,
+                        planNameSnapshot = session.planNameSnapshot,
+                        dayNameSnapshot = session.dayNameSnapshot,
+                        startedAt = session.startedAt,
+                        setCount = sets.size,
+                        tonnage = sets.sumOf { it.reps * it.weight },
+                    )
+                }
+        }
+
+    override fun observeSessionPlanNames(): Flow<List<String>> =
+        store.version.map {
+            store.sessions.values
+                .filter { it.finishedAt != null }
+                .map { it.planNameSnapshot }
+                .distinct()
+                .sortedBy { it.lowercase() }
+        }
 
     override suspend fun lastStartedDayId(dayIds: List<Long>): Long? =
         store.sessions.values
