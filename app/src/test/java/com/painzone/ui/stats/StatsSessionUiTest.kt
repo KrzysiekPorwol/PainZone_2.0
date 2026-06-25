@@ -4,6 +4,7 @@ import com.painzone.domain.session.Rpe
 import com.painzone.domain.stats.StatsSet
 import org.junit.Assert.assertEquals
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Test
 
@@ -79,5 +80,38 @@ class StatsSessionUiTest {
             set(1, sessionId = 1, order = 2, reps = 6, weight = 82.5, rpe = Rpe.Hard, restBeforeSeconds = 150),
         ).toSessionUi(utc)
         assertEquals("6 × 82.5 kg · RPE Ciężka · po 150s odpocz.", sessions[0].sets[0].text)
+    }
+
+    // --- Best set (M4.4) ---
+
+    private fun bestText(sets: List<StatsSet>, today: String) =
+        sets.toBestSetUi(LocalDate.parse(today), utc).text
+
+    @Test
+    fun `best set is highest estimated 1RM, not highest weight`() {
+        // 10×100 → 1RM est 133.3; 1×140 → 1RM est 144.7. Fewer reps heavier wins on 1RM.
+        val sets = listOf(
+            set(1, sessionId = 1, order = 1, reps = 10, weight = 100.0, startedAt = "2026-06-22T08:00:00Z"),
+            set(2, sessionId = 1, order = 2, reps = 1, weight = 140.0, startedAt = "2026-06-22T08:00:00Z"),
+        )
+        assertEquals("Best: 1 × 140 kg · 1RM≈145 kg · dziś", bestText(sets, "2026-06-22"))
+    }
+
+    @Test
+    fun `best set ties broken by newest session`() {
+        // Same 1RM est (5×100) in two sessions; the newer one (sessionId 2) wins and sets the date.
+        val sets = listOf(
+            set(20, sessionId = 2, order = 1, reps = 5, weight = 100.0, startedAt = "2026-06-22T08:00:00Z"),
+            set(10, sessionId = 1, order = 1, reps = 5, weight = 100.0, startedAt = "2026-06-15T08:00:00Z"),
+        )
+        assertEquals("Best: 5 × 100 kg · 1RM≈117 kg · dziś", bestText(sets, "2026-06-22"))
+    }
+
+    @Test
+    fun `days-ago label reflects the best set session date`() {
+        val sets = listOf(
+            set(1, sessionId = 1, order = 1, reps = 8, weight = 80.0, startedAt = "2026-06-20T08:00:00Z"),
+        )
+        assertEquals("Best: 8 × 80 kg · 1RM≈101 kg · 2 dni temu", bestText(sets, "2026-06-22"))
     }
 }

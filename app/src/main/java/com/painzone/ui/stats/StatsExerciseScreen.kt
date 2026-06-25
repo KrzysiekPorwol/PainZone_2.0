@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -107,7 +109,15 @@ private fun StatsExerciseScaffold(
             when (state) {
                 StatsUiState.Loading -> LoadingBody()
                 StatsUiState.Empty -> EmptyBody()
-                is StatsUiState.Content -> SessionList(state.sessions)
+                is StatsUiState.Content -> {
+                    BestSetCard(
+                        best = state.best,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                    SessionList(state.sessions)
+                }
             }
         }
     }
@@ -138,6 +148,21 @@ private fun PeriodFilter(
                 Text(label, maxLines = 1)
             }
         }
+    }
+}
+
+@Composable
+private fun BestSetCard(best: BestSetUi, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Text(
+            text = best.text,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.padding(16.dp),
+        )
     }
 }
 
@@ -267,7 +292,10 @@ private fun StatsExerciseContentPreview() {
             StatsExerciseScaffold(
                 exerciseName = "Wyciskanie sztangi",
                 muscleGroupLabel = "Klatka",
-                state = StatsUiState.Content(previewSessions),
+                state = StatsUiState.Content(
+                    best = BestSetUi("Best: 6 × 82.5 kg · 1RM≈99 kg · dziś"),
+                    sessions = previewSessions,
+                ),
                 selectedPeriod = StatsPeriod.LAST_90_DAYS,
                 onBack = {},
                 onSelectPeriod = {},

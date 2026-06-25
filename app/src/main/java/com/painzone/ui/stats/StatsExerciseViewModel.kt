@@ -8,6 +8,7 @@ import com.painzone.domain.stats.StatsPeriod
 import com.painzone.domain.stats.StatsRepository
 import com.painzone.ui.navigation.StatsExercise
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,8 +35,14 @@ class StatsExerciseViewModel @Inject constructor(
     val uiState: StateFlow<StatsUiState> = _selectedPeriod
         .flatMapLatest { period -> repository.observeSets(exerciseId, period) }
         .map { sets ->
-            if (sets.isEmpty()) StatsUiState.Empty
-            else StatsUiState.Content(sets.toSessionUi())
+            if (sets.isEmpty()) {
+                StatsUiState.Empty
+            } else {
+                StatsUiState.Content(
+                    best = sets.toBestSetUi(LocalDate.now()),
+                    sessions = sets.toSessionUi(),
+                )
+            }
         }
         .stateIn(
             scope = viewModelScope,
