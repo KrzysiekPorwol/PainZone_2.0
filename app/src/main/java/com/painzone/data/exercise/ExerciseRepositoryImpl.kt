@@ -23,6 +23,9 @@ class ExerciseRepositoryImpl @Inject constructor(
     override fun observeActive(): Flow<List<Exercise>> =
         dao.observeActive().map { list -> list.map(ExerciseEntity::toDomain) }
 
+    override fun observeById(id: Long): Flow<Exercise?> =
+        dao.observeById(id).map { it?.toDomain() }
+
     override suspend fun getById(id: Long): Exercise? =
         dao.getById(id)?.toDomain()
 

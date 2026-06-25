@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ExerciseRepository {
     fun observeActive(): Flow<List<Exercise>>
+    fun observeById(id: Long): Flow<Exercise?>
     suspend fun getById(id: Long): Exercise?
     suspend fun getUsageCount(id: Long): ExerciseUsage
     suspend fun create(name: String, muscleGroup: MuscleGroup): CreateResult

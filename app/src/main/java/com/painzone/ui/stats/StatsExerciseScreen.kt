@@ -47,11 +47,13 @@ fun StatsExerciseScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val period by viewModel.selectedPeriod.collectAsStateWithLifecycle()
+    val isDeleted by viewModel.isDeleted.collectAsStateWithLifecycle()
     StatsExerciseScaffold(
         exerciseName = exerciseName,
         muscleGroupLabel = muscleGroupLabel,
         state = state,
         selectedPeriod = period,
+        isDeleted = isDeleted,
         onBack = onBack,
         onSelectPeriod = viewModel::selectPeriod,
         modifier = modifier,
@@ -65,6 +67,7 @@ private fun StatsExerciseScaffold(
     muscleGroupLabel: String,
     state: StatsUiState,
     selectedPeriod: StatsPeriod,
+    isDeleted: Boolean,
     onBack: () -> Unit,
     onSelectPeriod: (StatsPeriod) -> Unit,
     modifier: Modifier = Modifier,
@@ -99,6 +102,9 @@ private fun StatsExerciseScaffold(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            if (isDeleted) {
+                DeletedBanner(modifier = Modifier.fillMaxWidth())
+            }
             PeriodFilter(
                 selected = selectedPeriod,
                 onSelect = onSelectPeriod,
@@ -162,6 +168,23 @@ private fun BestSetCard(best: BestSetUi, modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+// Soft-deleted exercise (M4.5): history is read-only and the exercise no longer exists in the
+// library. The frozen name/group in the TopBar still identify it; this banner flags the state.
+@Composable
+private fun DeletedBanner(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+    ) {
+        Text(
+            text = "Ćwiczenie usunięte — read-only",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }
 }
@@ -260,6 +283,7 @@ private fun StatsExerciseLoadingPreview() {
                 muscleGroupLabel = "Klatka",
                 state = StatsUiState.Loading,
                 selectedPeriod = StatsPeriod.LAST_90_DAYS,
+                isDeleted = false,
                 onBack = {},
                 onSelectPeriod = {},
             )
@@ -277,6 +301,7 @@ private fun StatsExerciseEmptyPreview() {
                 muscleGroupLabel = "Klatka",
                 state = StatsUiState.Empty,
                 selectedPeriod = StatsPeriod.LAST_30_DAYS,
+                isDeleted = false,
                 onBack = {},
                 onSelectPeriod = {},
             )
@@ -297,6 +322,28 @@ private fun StatsExerciseContentPreview() {
                     sessions = previewSessions,
                 ),
                 selectedPeriod = StatsPeriod.LAST_90_DAYS,
+                isDeleted = false,
+                onBack = {},
+                onSelectPeriod = {},
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Deleted")
+@Composable
+private fun StatsExerciseDeletedPreview() {
+    PainZoneTheme {
+        Surface {
+            StatsExerciseScaffold(
+                exerciseName = "Wyciskanie sztangi",
+                muscleGroupLabel = "Klatka",
+                state = StatsUiState.Content(
+                    best = BestSetUi("Best: 6 × 82.5 kg · 1RM≈99 kg · 12 dni temu"),
+                    sessions = previewSessions,
+                ),
+                selectedPeriod = StatsPeriod.LAST_90_DAYS,
+                isDeleted = true,
                 onBack = {},
                 onSelectPeriod = {},
             )

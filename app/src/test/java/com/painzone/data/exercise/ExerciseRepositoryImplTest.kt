@@ -170,6 +170,19 @@ class ExerciseRepositoryImplTest {
         assertEquals(1, emitted.size)
         assertEquals(active, emitted.first().id)
     }
+
+    @Test
+    fun `observeById emits soft-deleted exercise (drives S10 read-only marker)`() = runTest {
+        // M4.5: Stats keeps surfacing history via snapshot JOIN; observeById drives the banner.
+        val id = (repo.create("Calf raise", MuscleGroup.Legs) as CreateResult.Success).id
+        assertEquals(true, repo.observeById(id).first()?.isActive)
+
+        repo.softDelete(id)
+
+        val deleted = repo.observeById(id).first()
+        assertEquals(id, deleted?.id)
+        assertEquals(false, deleted?.isActive)
+    }
 }
 
 private class FakeExerciseDao : ExerciseDao {
@@ -198,6 +211,8 @@ private class FakeExerciseDao : ExerciseDao {
         }
 
     override suspend fun getById(id: Long): ExerciseEntity? = store[id]
+
+    override fun observeById(id: Long): Flow<ExerciseEntity?> = flow.map { store[id] }
 
     override suspend fun findActiveByName(name: String): ExerciseEntity? =
         store.values.firstOrNull { it.name == name && it.deletedAt == null }
