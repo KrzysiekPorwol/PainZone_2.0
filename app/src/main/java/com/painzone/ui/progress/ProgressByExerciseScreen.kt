@@ -9,13 +9,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,42 +33,54 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.painzone.domain.exercise.Exercise
 import com.painzone.domain.exercise.MuscleGroup
-import com.painzone.ui.common.TopLevelTopBar
 import com.painzone.ui.library.labelPl
 import com.painzone.ui.theme.PainZoneTheme
 import java.time.Instant
 
 @Composable
-fun ProgressScreen(
-    onManageLibrary: () -> Unit,
+fun ProgressByExerciseScreen(
+    onBack: () -> Unit,
     onOpenStats: (exerciseId: Long, exerciseName: String, muscleGroupLabel: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ProgressViewModel = hiltViewModel(),
+    viewModel: ProgressByExerciseViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ProgressScaffold(
+    ProgressByExerciseScaffold(
         state = state,
-        onManageLibrary = onManageLibrary,
+        onBack = onBack,
         onOpenStats = onOpenStats,
         modifier = modifier,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProgressScaffold(
-    state: ProgressUiState,
-    onManageLibrary: () -> Unit,
+private fun ProgressByExerciseScaffold(
+    state: ProgressByExerciseUiState,
+    onBack: () -> Unit,
     onOpenStats: (Long, String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopLevelTopBar(title = "Postęp", onManageLibrary = onManageLibrary) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Po ćwiczeniu") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Wstecz",
+                        )
+                    }
+                },
+            )
+        },
     ) { innerPadding ->
         when (state) {
-            ProgressUiState.Loading -> CenterBox(innerPadding) { CircularProgressIndicator() }
-            ProgressUiState.Empty -> EmptyBody(innerPadding)
-            is ProgressUiState.Content -> ExerciseList(state.exercises, innerPadding, onOpenStats)
+            ProgressByExerciseUiState.Loading -> CenterBox(innerPadding) { CircularProgressIndicator() }
+            ProgressByExerciseUiState.Empty -> EmptyBody(innerPadding)
+            is ProgressByExerciseUiState.Content -> ExerciseList(state.exercises, innerPadding, onOpenStats)
         }
     }
 }
@@ -91,12 +109,12 @@ private fun EmptyBody(innerPadding: PaddingValues) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = "Brak historii",
+                text = "Brak ćwiczeń",
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Zakończ pierwszą sesję, aby zobaczyć postęp.",
+                text = "Dodaj ćwiczenie w bibliotece, aby śledzić postęp.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -138,24 +156,30 @@ private val previewExercises = listOf(
 
 @Preview(showBackground = true, name = "Loading")
 @Composable
-private fun ProgressLoadingPreview() {
+private fun ProgressByExerciseLoadingPreview() {
     PainZoneTheme {
-        Surface { ProgressScaffold(ProgressUiState.Loading, {}, { _, _, _ -> }) }
+        Surface { ProgressByExerciseScaffold(ProgressByExerciseUiState.Loading, {}, { _, _, _ -> }) }
     }
 }
 
 @Preview(showBackground = true, name = "Empty")
 @Composable
-private fun ProgressEmptyPreview() {
+private fun ProgressByExerciseEmptyPreview() {
     PainZoneTheme {
-        Surface { ProgressScaffold(ProgressUiState.Empty, {}, { _, _, _ -> }) }
+        Surface { ProgressByExerciseScaffold(ProgressByExerciseUiState.Empty, {}, { _, _, _ -> }) }
     }
 }
 
 @Preview(showBackground = true, name = "Content")
 @Composable
-private fun ProgressContentPreview() {
+private fun ProgressByExerciseContentPreview() {
     PainZoneTheme {
-        Surface { ProgressScaffold(ProgressUiState.Content(previewExercises), {}, { _, _, _ -> }) }
+        Surface {
+            ProgressByExerciseScaffold(
+                ProgressByExerciseUiState.Content(previewExercises),
+                {},
+                { _, _, _ -> },
+            )
+        }
     }
 }

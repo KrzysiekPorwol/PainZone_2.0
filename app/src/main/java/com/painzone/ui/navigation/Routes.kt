@@ -10,8 +10,13 @@ data object Train : Route
 @Serializable
 data object Plans : Route
 
+// S3 — Postęp hub (3 history modes). The "Po ćwiczeniu" mode is a sub-screen below.
 @Serializable
 data object Progress : Route
+
+// S3 → "Po ćwiczeniu": exercise list entry points to per-exercise stats (S10).
+@Serializable
+data object ProgressByExercise : Route
 
 @Serializable
 data object Library : Route

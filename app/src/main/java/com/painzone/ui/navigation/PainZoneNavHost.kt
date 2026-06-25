@@ -13,7 +13,8 @@ import androidx.navigation.toRoute
 import com.painzone.ui.plans.detail.DayDetailScreen
 import com.painzone.ui.plans.detail.ExercisePickerScreen
 import com.painzone.ui.plans.detail.PlanDetailScreen
-import com.painzone.ui.progress.ProgressScreen
+import com.painzone.ui.progress.ProgressByExerciseScreen
+import com.painzone.ui.progress.ProgressHubScreen
 import com.painzone.ui.session.SessionScreen
 import com.painzone.ui.stats.StatsExerciseScreen
 import com.painzone.ui.train.TrainScreen
@@ -52,8 +53,17 @@ fun PainZoneNavHost(
             )
         }
         composable<Progress> {
-            ProgressScreen(
+            ProgressHubScreen(
                 onManageLibrary = onManageLibrary,
+                onByExercise = { navController.navigate(ProgressByExercise) },
+                // S12 / S13 land in M5.2 — cards are shown disabled ("Wkrótce") until then.
+                onByPlan = {},
+                onChronological = {},
+            )
+        }
+        composable<ProgressByExercise> {
+            ProgressByExerciseScreen(
+                onBack = { navController.popBackStack() },
                 onOpenStats = { exerciseId, name, muscleGroupLabel ->
                     navController.navigate(StatsExercise(exerciseId, name, muscleGroupLabel))
                 },

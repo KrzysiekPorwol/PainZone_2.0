@@ -39,6 +39,9 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun getInProgress(): WorkoutSession? =
         sessionDao.getInProgress()?.toDomain()
 
+    override fun observeHasCompletedSessions(): Flow<Boolean> =
+        sessionDao.observeHasCompleted()
+
     override fun observeSessionDetail(sessionId: Long): Flow<SessionDetail?> =
         sessionDao.observeWithDetail(sessionId).map { it?.toDomain() }
 

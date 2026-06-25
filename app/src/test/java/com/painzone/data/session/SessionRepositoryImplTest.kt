@@ -163,6 +163,19 @@ class SessionRepositoryImplTest {
     }
 
     @Test
+    fun `observeHasCompletedSessions is false until a session is finished`() = runTest {
+        val dayId = seedPlanDay(exercises = listOf(ExSpec()))
+
+        assertFalse(repo.observeHasCompletedSessions().first())
+
+        val id = (repo.start(dayId) as StartSessionResult.Success).sessionId
+        assertFalse(repo.observeHasCompletedSessions().first())
+
+        repo.finish(id)
+        assertTrue(repo.observeHasCompletedSessions().first())
+    }
+
+    @Test
     fun `getSessionDetail returns session with ordered snapshots and logged sets`() = runTest {
         val dayId = seedPlanDay(
             exercises = listOf(
@@ -435,6 +448,9 @@ private class FakeWorkoutSessionDao(private val store: FakeSessionStore) : Worko
 
     override fun observeCompleted(): Flow<List<WorkoutSessionEntity>> =
         store.version.map { store.sessions.values.filter { it.finishedAt != null } }
+
+    override fun observeHasCompleted(): Flow<Boolean> =
+        store.version.map { store.sessions.values.any { it.finishedAt != null } }
 
     override suspend fun lastStartedDayId(dayIds: List<Long>): Long? =
         store.sessions.values

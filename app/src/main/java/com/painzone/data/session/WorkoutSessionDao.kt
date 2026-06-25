@@ -51,6 +51,10 @@ interface WorkoutSessionDao {
     @Query("SELECT * FROM workout_session WHERE finished_at IS NOT NULL ORDER BY started_at DESC")
     fun observeCompleted(): Flow<List<WorkoutSessionEntity>>
 
+    // S3 hub empty state: true once at least one session has been finished.
+    @Query("SELECT EXISTS(SELECT 1 FROM workout_session WHERE finished_at IS NOT NULL)")
+    fun observeHasCompleted(): Flow<Boolean>
+
     // Rotation anchor for the smart suggestion (S1): plannedDayId of the most recently started
     // session among the given days, or null when none of them has ever been trained.
     @Query(

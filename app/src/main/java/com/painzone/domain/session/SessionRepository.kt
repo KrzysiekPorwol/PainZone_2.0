@@ -8,6 +8,10 @@ interface SessionRepository {
     fun observeInProgress(): Flow<WorkoutSession?>
     suspend fun getInProgress(): WorkoutSession?
 
+    // S3 Postęp hub: true once at least one session is finished. Drives the shared empty state
+    // (no completed sessions → all three history modes are empty).
+    fun observeHasCompletedSessions(): Flow<Boolean>
+
     // Full session graph (snapshots + logged sets) for the session screen and resume restore.
     fun observeSessionDetail(sessionId: Long): Flow<SessionDetail?>
     suspend fun getSessionDetail(sessionId: Long): SessionDetail?
