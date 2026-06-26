@@ -63,7 +63,7 @@ Historia per ćwiczenie z filtrami i best set.
 ### M5 · Polish & Release
 Postęp hub + Historia sesji (3 tryby), Settings, ikona, Play Store Internal testing.
 - (zrobione) **M5.1 · Postęp hub (S3)** — S3 to hub z 3 kartami: „Po ćwiczeniu" → podekran z listą ćwiczeń (`ProgressByExercise`) → S10; „Po planie" (S12) i „Chronologicznie" (S13) jako karty disabled „Wkrótce" do M5.2. Wspólny empty „Brak historii" oparty na `SessionRepository.observeHasCompletedSessions()` (DAO `observeHasCompleted` = EXISTS finished). Bez migracji (schema v4). Wireframe: `04-wireframes-toplevel.md#S3`.
-- **M5.2 · Historia sesji (S13) + wybór planu (S12)** — `SessionRepository.observeCompleted(planNameFilter?)` (lista zakończonych sesji, sort najnowsza→najstarsza, opcjonalny filtr po `plan_name_snapshot`) + S12 plan picker (plany z ≥1 sesją, distinct `plan_name_snapshot`) + S13 lista z dropdown-filtrem planu. Karta sesji: data · plan · dzień · N serii · tonaż. Wireframe: `04-wireframes-history.md`.
+- (zrobione) **M5.2 · Historia sesji (S13) + wybór planu (S12)** — `SessionRepository.observeCompleted(planNameFilter?)` (lista zakończonych sesji, sort najnowsza→najstarsza, opcjonalny filtr po `plan_name_snapshot`) + S12 plan picker (plany z ≥1 sesją, distinct `plan_name_snapshot`) + S13 lista z dropdown-filtrem planu. Karta sesji: data · plan · dzień · N serii · tonaż. Wireframe: `04-wireframes-history.md`.
 - **M5.3 · SessionDetailScreen (S14)** — read-only widok zakończonej sesji (snapshot z momentu sesji), reuse layoutu serii z S9. Marker „usunięte" gdy ćwiczenie soft-deleted.
 - **M5.4 · SettingsScreen** — about, version, link do Play Store.
 - **M5.5 · App icon** — adaptive icon (foreground + background) + Play Store icon.
