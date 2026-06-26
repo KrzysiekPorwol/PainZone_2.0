@@ -77,12 +77,19 @@ class LibraryViewModel @Inject constructor(
     fun requestDelete(exerciseId: Long) {
         viewModelScope.launch {
             val exercise = repository.getById(exerciseId) ?: return@launch
-            val usage = repository.getUsageCount(exerciseId)
-            _deleteDialogState.value = DeleteDialogState.Visible(
-                exerciseId = exercise.id,
-                exerciseName = exercise.name,
-                usage = usage,
-            )
+            val planNames = repository.plansUsing(exerciseId)
+            _deleteDialogState.value = if (planNames.isNotEmpty()) {
+                DeleteDialogState.Blocked(
+                    exerciseName = exercise.name,
+                    planNames = planNames,
+                )
+            } else {
+                DeleteDialogState.Confirm(
+                    exerciseId = exercise.id,
+                    exerciseName = exercise.name,
+                    usage = repository.getUsageCount(exerciseId),
+                )
+            }
         }
     }
 
@@ -91,7 +98,7 @@ class LibraryViewModel @Inject constructor(
     }
 
     fun confirmDelete() {
-        val current = _deleteDialogState.value as? DeleteDialogState.Visible ?: return
+        val current = _deleteDialogState.value as? DeleteDialogState.Confirm ?: return
         viewModelScope.launch {
             val result = repository.softDelete(current.exerciseId)
             _deleteDialogState.value = DeleteDialogState.Hidden

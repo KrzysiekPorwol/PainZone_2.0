@@ -729,6 +729,9 @@ private class FakePlannedExerciseDao : PlannedExerciseDao {
     override suspend fun updateOrder(id: Long, order: Int) = throw NotImplementedError()
     override suspend fun countDistinctPlansForExercise(exerciseId: Long): Int =
         throw NotImplementedError()
+
+    override suspend fun planNamesForExercise(exerciseId: Long): List<String> =
+        throw NotImplementedError()
 }
 
 private class FakeExerciseDao : ExerciseDao {

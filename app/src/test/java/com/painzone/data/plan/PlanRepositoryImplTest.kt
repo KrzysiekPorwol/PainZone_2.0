@@ -484,6 +484,8 @@ private class FakePlannedExerciseDao : PlannedExerciseDao {
 
     override suspend fun countDistinctPlansForExercise(exerciseId: Long): Int = 0
 
+    override suspend fun planNamesForExercise(exerciseId: Long): List<String> = emptyList()
+
     suspend fun deleteByDayId(dayId: Long) {
         val toRemove = store.values.filter { it.plannedDayId == dayId }.map { it.id }
         toRemove.forEach { deleteById(it) }

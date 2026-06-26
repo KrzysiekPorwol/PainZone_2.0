@@ -15,9 +15,9 @@ Actions: back→poprzedni-ekran
 States: MVP minimal — sztywny **dark theme** Material 3 (bez theme toggle, bez Material You / dynamic color — wizja §7 Non-Goals)
 
 **D1** Usuń obiekt [dialog · S4/S5/S7]
-Fields: Title("Usunąć [obiekt]?") · Body(warning · gdy-ćwiczenie-w-użyciu: "Używane w N planach · M sesjach — historia zostanie zachowana jako read-only")
+Fields: Title("Usunąć [obiekt]?") · Body(warning · gdy-ćwiczenie-z-historią: "Historia M sesji zostanie zachowana jako read-only")
 Actions: [Anuluj] · [Usuń](destructive)→back+snackbar"Usunięto"
-States: simple (plan/dzień bez countera); usage (ćwiczenie z counterem + nota o soft delete)
+States: simple (plan/dzień bez countera); confirm-z-historią (ćwiczenie, M>0); **blocked** (ćwiczenie w ≥1 planie → Title"Nie można usunąć „X"" · Body"używane w planach: … · usuń je z tych planów" · jedyna akcja [Rozumiem], brak destructive)
 
 **D3** Reset danych [dialog · S11]
 Fields: Title("Usunąć wszystkie dane?") · Body("Plany, ćwiczenia, sesje — bezpowrotnie. Operacji nie da się cofnąć.")

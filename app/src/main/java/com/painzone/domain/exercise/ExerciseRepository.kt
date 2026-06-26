@@ -9,6 +9,8 @@ interface ExerciseRepository {
     fun observeDeletedIds(): Flow<Set<Long>>
     suspend fun getById(id: Long): Exercise?
     suspend fun getUsageCount(id: Long): ExerciseUsage
+    // Distinct plan names referencing the exercise. Non-empty → delete is blocked.
+    suspend fun plansUsing(id: Long): List<String>
     suspend fun create(name: String, muscleGroup: MuscleGroup): CreateResult
     suspend fun rename(id: Long, newName: String): RenameResult
     suspend fun softDelete(id: Long): SoftDeleteResult

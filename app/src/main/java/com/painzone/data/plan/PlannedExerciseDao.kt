@@ -50,4 +50,17 @@ interface PlannedExerciseDao {
         """,
     )
     suspend fun countDistinctPlansForExercise(exerciseId: Long): Int
+
+    // Distinct plan names that reference the exercise — feeds the delete-blocked dialog.
+    @Query(
+        """
+        SELECT DISTINCT tp.name
+        FROM planned_exercise pe
+        JOIN planned_day pd ON pe.planned_day_id = pd.id
+        JOIN training_plan tp ON pd.training_plan_id = tp.id
+        WHERE pe.exercise_id = :exerciseId
+        ORDER BY tp.name
+        """,
+    )
+    suspend fun planNamesForExercise(exerciseId: Long): List<String>
 }

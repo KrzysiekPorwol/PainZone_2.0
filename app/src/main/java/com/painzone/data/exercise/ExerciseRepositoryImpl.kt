@@ -39,6 +39,9 @@ class ExerciseRepositoryImpl @Inject constructor(
             sessionsCount = 0,
         )
 
+    override suspend fun plansUsing(id: Long): List<String> =
+        plannedExerciseDao.planNamesForExercise(id)
+
     override suspend fun create(name: String, muscleGroup: MuscleGroup): CreateResult {
         val trimmed = name.trim()
         if (dao.findActiveByName(trimmed) != null) return CreateResult.DuplicateName

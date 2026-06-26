@@ -12,10 +12,18 @@ sealed interface LibraryUiState {
 
 sealed interface DeleteDialogState {
     data object Hidden : DeleteDialogState
-    data class Visible(
+
+    // Exercise is in no plan → soft delete allowed (history, if any, kept read-only).
+    data class Confirm(
         val exerciseId: Long,
         val exerciseName: String,
         val usage: ExerciseUsage,
+    ) : DeleteDialogState
+
+    // Exercise is referenced by ≥1 plan → delete blocked until removed from those plans.
+    data class Blocked(
+        val exerciseName: String,
+        val planNames: List<String>,
     ) : DeleteDialogState
 }
 

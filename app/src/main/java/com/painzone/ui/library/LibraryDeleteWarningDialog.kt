@@ -21,9 +21,13 @@ fun LibraryDeleteWarningDialog(
         onDismissRequest = onDismiss,
         title = { Text("Usunąć „$exerciseName”?") },
         text = {
+            // Reached only when the exercise is in no plan; history (if any) stays read-only.
             Text(
-                text = "Używane w ${usage.plansCount} planach · " +
-                    "${usage.sessionsCount} sesjach — historia zostanie zachowana jako read-only.",
+                text = if (usage.sessionsCount > 0) {
+                    "Historia ${usage.sessionsCount} sesji zostanie zachowana jako read-only."
+                } else {
+                    "Tej operacji nie można cofnąć."
+                },
             )
         },
         confirmButton = {
@@ -42,7 +46,7 @@ fun LibraryDeleteWarningDialog(
     )
 }
 
-@Preview(showBackground = true, name = "Dialog (usage 0/0)")
+@Preview(showBackground = true, name = "Confirm (bez historii)")
 @Composable
 private fun LibraryDeleteWarningDialogEmptyUsagePreview() {
     PainZoneTheme {
@@ -57,14 +61,14 @@ private fun LibraryDeleteWarningDialogEmptyUsagePreview() {
     }
 }
 
-@Preview(showBackground = true, name = "Dialog (usage 2/15)")
+@Preview(showBackground = true, name = "Confirm (z historią)")
 @Composable
 private fun LibraryDeleteWarningDialogWithUsagePreview() {
     PainZoneTheme {
         Surface {
             LibraryDeleteWarningDialog(
                 exerciseName = "Przysiad ze sztangą",
-                usage = ExerciseUsage(plansCount = 2, sessionsCount = 15),
+                usage = ExerciseUsage(plansCount = 0, sessionsCount = 15),
                 onConfirm = {},
                 onDismiss = {},
             )

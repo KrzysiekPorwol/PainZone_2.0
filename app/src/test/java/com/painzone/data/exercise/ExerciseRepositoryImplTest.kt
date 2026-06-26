@@ -227,6 +227,7 @@ private class FakeExerciseDao : ExerciseDao {
 
 private class StubPlannedExerciseDao : PlannedExerciseDao {
     val plansCountFor = mutableMapOf<Long, Int>()
+    val planNamesFor = mutableMapOf<Long, List<String>>()
 
     override suspend fun insert(entity: PlannedExerciseEntity): Long = 0L
     override suspend fun update(entity: PlannedExerciseEntity) = Unit
@@ -238,4 +239,7 @@ private class StubPlannedExerciseDao : PlannedExerciseDao {
     override suspend fun updateOrder(id: Long, order: Int) = Unit
     override suspend fun countDistinctPlansForExercise(exerciseId: Long): Int =
         plansCountFor[exerciseId] ?: 0
+
+    override suspend fun planNamesForExercise(exerciseId: Long): List<String> =
+        planNamesFor[exerciseId] ?: emptyList()
 }

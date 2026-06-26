@@ -90,11 +90,18 @@ fun LibraryScreen(
                 onDismiss = viewModel::cancelEdit,
             )
         }
-        (deleteState as? DeleteDialogState.Visible)?.let { visible ->
+        (deleteState as? DeleteDialogState.Confirm)?.let { confirm ->
             LibraryDeleteWarningDialog(
-                exerciseName = visible.exerciseName,
-                usage = visible.usage,
+                exerciseName = confirm.exerciseName,
+                usage = confirm.usage,
                 onConfirm = viewModel::confirmDelete,
+                onDismiss = viewModel::cancelDelete,
+            )
+        }
+        (deleteState as? DeleteDialogState.Blocked)?.let { blocked ->
+            LibraryDeleteBlockedDialog(
+                exerciseName = blocked.exerciseName,
+                planNames = blocked.planNames,
                 onDismiss = viewModel::cancelDelete,
             )
         }

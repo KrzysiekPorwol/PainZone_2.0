@@ -26,9 +26,10 @@
 - `restore(id)` → set `deletedAt = null` (post-MVP).
 
 **Pre-delete validation (US-1 AC):**
-- Query: N = liczba aktywnych `PlannedExercise` z `exerciseId == id`; M = liczba `SessionExerciseSnapshot` (cała historia).
-- Jeśli `N + M > 0` → UI confirm (D1, [[04-wireframes-misc]]): *"Używane w N planach · M sesjach — historia zostanie zachowana jako read-only. Po usunięciu zostanie pominięte w sesjach z tych planów."*
-- User confirms → `softDelete` proceeds. User cancels → noop.
+- Query: N = lista nazw planów (distinct) z aktywnym `PlannedExercise` z `exerciseId == id`; M = liczba `SessionExerciseSnapshot` (cała historia).
+- **Jeśli N niepuste → blokada.** Dialog informacyjny (D1, [[04-wireframes-misc]]): *"Nie można usunąć „X" — używane w planach: …. Usuń je z tych planów, aby móc usunąć z biblioteki."* Jedyna akcja: zamknij. `softDelete` **nie** następuje.
+- Jeśli N puste a `M > 0` → confirm z notą *"Historia M sesji zostanie zachowana jako read-only."* User confirms → `softDelete`. Cancel → noop.
+- Jeśli N puste i `M == 0` → prosty confirm.
 
 **Relacje (out):**
 - 1..N `PlannedExercise` (przez `exerciseId`)
@@ -37,7 +38,7 @@
 
 **Widoczność soft-deleted:**
 - Biblioteka (US-1): filtr `deletedAt IS NULL`.
-- Plan edit (US-2): nie da się dodać; istniejące zostają z markerem "usunięte".
+- Plan edit (US-2): nie da się dodać. Blokada usuwania (wyżej) gwarantuje, że aktywny plan nie zyska nowego ducha; marker "usunięte" zostaje jako fallback dla danych sprzed reguły blokady.
 - Sesja (US-3): **skip** — pomijane przy starcie z planu (model (a), patrz Rationale).
 - Stats Lite (US-6): pokazuje historyczne LoggedSet, marker "usunięte".
 
@@ -56,6 +57,8 @@ Nie encja — query view: `SELECT * FROM exercise WHERE deletedAt IS NULL ORDER 
 
 **Soft delete zamiast hard:** historia LoggedSet musi przetrwać usunięcie (US-6: Stats pokazuje "usunięte" ćwiczenia read-only). Hard delete złamałby invariant `LoggedSet.exerciseId != null` lub wymagał denormalizacji nazwy do każdego LoggedSet.
 
-**Skip soft-deleted w sesji (model a):** USP "logowanie bez ceremonii" — sesja w drzwiach siłowni nie może blokować się modalami. Pre-delete validation odbywa się **wcześniej** (przy delete), więc user świadomie zaakceptował konsekwencje. Read-only marker w sesji (model b) lub blokada (model c) wprowadzają friction w hot path.
+**Skip soft-deleted w sesji (model a):** USP "logowanie bez ceremonii" — sesja w drzwiach siłowni nie może blokować się modalami. Skip pozostaje obroną dla danych sprzed blokady (legacy ducha) oraz dla planu, z którego ćwiczenie usunięto po starcie sesji. Read-only marker w sesji (model b) lub blokada (model c) wprowadzają friction w hot path.
+
+**Blokada usuwania gdy w planie (zamiast soft-delete z duchem):** soft-deleted ćwiczenie zostawione w aktywnym planie pokazuje "ducha" („Ćwiczenie usunięte"), który wisi i wygląda na zepsuty. Historia żyje przez `SessionExerciseSnapshot` (zamrożona kopia) — niezależna od żywego FK planu — więc blokada na wymiarze planu **nie** zagraża historii. Decyzja: lepiej zmusić usera do świadomego usunięcia z planów (kontrola nad zawartością planu) niż cicho mutować plan lub trzymać ducha. Soft delete pozostaje dla wymiaru historii (M > 0).
 
 **MuscleGroup enum vs tabela:** lista zamknięta domenowo (anatomia człowieka się nie zmienia), zero user-defined → enum prostszy, type-safe, brak dodatkowych zapytań. Migracja do tabeli możliwa gdyby kiedyś v2 wymagała user-defined kategorii.
