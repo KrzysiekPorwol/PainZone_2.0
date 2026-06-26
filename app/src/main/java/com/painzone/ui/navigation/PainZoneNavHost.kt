@@ -13,6 +13,7 @@ import androidx.navigation.toRoute
 import com.painzone.ui.plans.detail.DayDetailScreen
 import com.painzone.ui.plans.detail.ExercisePickerScreen
 import com.painzone.ui.plans.detail.PlanDetailScreen
+import com.painzone.ui.history.SessionDetailScreen
 import com.painzone.ui.history.SessionHistoryScreen
 import com.painzone.ui.history.SessionPlanPickerScreen
 import com.painzone.ui.progress.ProgressByExerciseScreen
@@ -79,9 +80,11 @@ fun PainZoneNavHost(
         composable<SessionHistory> {
             SessionHistoryScreen(
                 onBack = { navController.popBackStack() },
-                // S14 read-only session detail lands in M5.3.
-                onOpenSession = {},
+                onOpenSession = { sessionId -> navController.navigate(SessionDetail(sessionId)) },
             )
+        }
+        composable<SessionDetail> {
+            SessionDetailScreen(onBack = { navController.popBackStack() })
         }
         composable<Library> { LibraryScreen(onBack = { navController.popBackStack() }) }
         composable<PlanCreate> {

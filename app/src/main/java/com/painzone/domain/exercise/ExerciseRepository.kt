@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 interface ExerciseRepository {
     fun observeActive(): Flow<List<Exercise>>
     fun observeById(id: Long): Flow<Exercise?>
+    // Ids of soft-deleted exercises — feeds the S14 "usunięte" marker per session exercise.
+    fun observeDeletedIds(): Flow<Set<Long>>
     suspend fun getById(id: Long): Exercise?
     suspend fun getUsageCount(id: Long): ExerciseUsage
     suspend fun create(name: String, muscleGroup: MuscleGroup): CreateResult

@@ -536,6 +536,9 @@ private class FakeExerciseDaoForPlanTest : ExerciseDao {
 
     override fun observeById(id: Long): Flow<ExerciseEntity?> = flow.map { store[id] }
 
+    override fun observeDeletedIds(): Flow<List<Long>> =
+        flow.map { list -> list.filter { it.deletedAt != null }.map { it.id } }
+
     override suspend fun findActiveByName(name: String): ExerciseEntity? =
         store.values.firstOrNull { it.name == name && it.deletedAt == null }
 

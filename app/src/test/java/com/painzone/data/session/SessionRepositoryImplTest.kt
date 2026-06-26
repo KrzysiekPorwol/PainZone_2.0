@@ -756,5 +756,6 @@ private class FakeExerciseDao : ExerciseDao {
     override fun observeActive(): Flow<List<ExerciseEntity>> = throw NotImplementedError()
     override suspend fun getById(id: Long): ExerciseEntity? = store[id]
     override fun observeById(id: Long): Flow<ExerciseEntity?> = throw NotImplementedError()
+    override fun observeDeletedIds(): Flow<List<Long>> = throw NotImplementedError()
     override suspend fun findActiveByName(name: String): ExerciseEntity? = throw NotImplementedError()
 }

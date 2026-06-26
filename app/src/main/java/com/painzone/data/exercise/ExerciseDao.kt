@@ -24,6 +24,11 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercise WHERE id = :id")
     fun observeById(id: Long): Flow<ExerciseEntity?>
 
+    // Soft-deleted exercise ids — backs the per-exercise "usunięte" marker on S14 (read-only
+    // session detail). Bounded set: only deleted exercises, of which there are few.
+    @Query("SELECT id FROM exercise WHERE deleted_at IS NOT NULL")
+    fun observeDeletedIds(): Flow<List<Long>>
+
     @Query("SELECT * FROM exercise WHERE name = :name AND deleted_at IS NULL LIMIT 1")
     suspend fun findActiveByName(name: String): ExerciseEntity?
 }

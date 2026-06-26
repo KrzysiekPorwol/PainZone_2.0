@@ -27,6 +27,11 @@ data object SessionPlanPicker : Route
 @Serializable
 data class SessionHistory(val planNameFilter: String? = null) : Route
 
+// S14 — read-only detail of a finished session. Renders the snapshot from the moment of the
+// session (survives plan/exercise rename & delete), so only the session id is carried.
+@Serializable
+data class SessionDetail(val sessionId: Long) : Route
+
 @Serializable
 data object Library : Route
 
