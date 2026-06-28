@@ -5,14 +5,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -24,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -154,27 +159,17 @@ private fun LoadedBody(
 
 @Composable
 private fun ResumeCard(resume: ResumeInfo, onResume: (Long) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
-    ) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = "Sesja w toku",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            Text(
-                text = "${resume.planName} · ${resume.dayName}",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            CardHeader(
+                icon = Icons.Filled.PlayArrow,
+                eyebrow = "Sesja w toku",
+                title = "${resume.planName} · ${resume.dayName}",
             )
             Button(
                 onClick = { onResume(resume.sessionId) },
@@ -192,19 +187,18 @@ private fun ActivePlanCard(
     sessionInProgress: Boolean,
     onStartDay: (Long) -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = "Aktywny plan",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            CardHeader(
+                icon = Icons.Filled.FitnessCenter,
+                eyebrow = "Aktywny plan",
+                title = plan.planName,
             )
-            Text(text = plan.planName, style = MaterialTheme.typography.titleLarge)
             val hint = when {
                 sessionInProgress -> "Zakończ bieżącą sesję, aby zacząć nową."
                 plan.allDays.isEmpty() -> "Dodaj sesję treningową do planu, aby zacząć."
@@ -238,6 +232,33 @@ private fun ActivePlanCard(
                     ) { Text(label) }
                 }
             }
+        }
+    }
+}
+
+// Leading-icon header shared by the Train cards, matching the Postęp hub card look.
+@Composable
+private fun CardHeader(icon: ImageVector, eyebrow: String, title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = eyebrow,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
         }
     }
 }

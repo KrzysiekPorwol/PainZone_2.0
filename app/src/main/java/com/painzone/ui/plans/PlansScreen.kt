@@ -7,22 +7,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -179,46 +180,77 @@ private fun ContentBody(
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding),
+        // Bottom padding keeps the last card clear of the FAB.
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = items, key = { it.id }) { plan ->
-            ListItem(
-                headlineContent = { Text(plan.name) },
-                supportingContent = { Text(dayCountLabel(plan.dayCount)) },
-                trailingContent = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        IconButton(onClick = { onToggleActive(plan) }) {
-                            Icon(
-                                imageVector = if (plan.isActive) {
-                                    Icons.Filled.Star
-                                } else {
-                                    Icons.Outlined.StarBorder
-                                },
-                                contentDescription = if (plan.isActive) {
-                                    "Odznacz plan ${plan.name}"
-                                } else {
-                                    "Aktywuj plan ${plan.name}"
-                                },
-                                tint = if (plan.isActive) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                            )
-                        }
-                        IconButton(onClick = { onRequestDelete(plan.id, plan.name) }) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = "Usuń ${plan.name}",
-                            )
-                        }
-                    }
-                },
-                modifier = Modifier.clickable { onOpenPlan(plan.id) },
+            PlanCard(
+                plan = plan,
+                onOpen = { onOpenPlan(plan.id) },
+                onToggleActive = { onToggleActive(plan) },
+                onRequestDelete = { onRequestDelete(plan.id, plan.name) },
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        }
+    }
+}
+
+@Composable
+private fun PlanCard(
+    plan: PlanSummary,
+    onOpen: () -> Unit,
+    onToggleActive: () -> Unit,
+    onRequestDelete: () -> Unit,
+) {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpen),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 8.dp, end = 4.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.FitnessCenter,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(text = plan.name, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = dayCountLabel(plan.dayCount),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onToggleActive) {
+                Icon(
+                    imageVector = if (plan.isActive) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = if (plan.isActive) {
+                        "Odznacz plan ${plan.name}"
+                    } else {
+                        "Aktywuj plan ${plan.name}"
+                    },
+                    tint = if (plan.isActive) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
+            IconButton(onClick = onRequestDelete) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Usuń ${plan.name}",
+                )
+            }
         }
     }
 }
