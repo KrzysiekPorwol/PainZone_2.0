@@ -11,4 +11,6 @@ data class TrainingPlanEntity(
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "is_active") val isActive: Boolean,
     @ColumnInfo(name = "created_at") val createdAt: Instant,
+    // PlanIcon enum stored by name; defaulted for rows created before M5 (icon feature).
+    @ColumnInfo(name = "icon", defaultValue = "FITNESS_CENTER") val icon: String = "FITNESS_CENTER",
 )

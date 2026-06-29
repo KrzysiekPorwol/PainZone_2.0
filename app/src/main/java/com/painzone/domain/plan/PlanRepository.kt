@@ -10,7 +10,7 @@ interface PlanRepository {
     fun observeActive(): Flow<TrainingPlan?>
     fun observePlanWithDays(id: Long): Flow<PlanWithDays?>
     suspend fun getById(id: Long): TrainingPlan?
-    suspend fun create(name: String): CreatePlanResult
+    suspend fun create(name: String, icon: PlanIcon = PlanIcon.DEFAULT): CreatePlanResult
     suspend fun rename(id: Long, newName: String): RenamePlanResult
     suspend fun setActive(id: Long): ActivatePlanResult
     suspend fun deactivate(id: Long): ActivatePlanResult

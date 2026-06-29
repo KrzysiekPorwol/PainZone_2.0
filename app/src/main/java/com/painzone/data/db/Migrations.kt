@@ -108,3 +108,10 @@ val MIGRATION_3_4: Migration = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE `logged_set` ADD COLUMN `rest_before_seconds` INTEGER")
     }
 }
+
+// M5: per-plan icon picked at creation. Existing plans default to the dumbbell icon.
+val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `training_plan` ADD COLUMN `icon` TEXT NOT NULL DEFAULT 'FITNESS_CENTER'")
+    }
+}

@@ -3,6 +3,8 @@ package com.painzone.ui.plans
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.painzone.domain.plan.PlanIcon
 import com.painzone.ui.theme.PainZoneTheme
 
 @Composable
@@ -71,6 +75,7 @@ fun PlanCreateScreen(
     PlanCreateContent(
         state = state,
         onNameChange = viewModel::onNameChange,
+        onIconChange = viewModel::onIconChange,
         onIncrementDays = viewModel::incrementDays,
         onDecrementDays = viewModel::decrementDays,
         onDayNameChange = viewModel::onDayNameChange,
@@ -105,6 +110,7 @@ fun PlanCreateScreen(
 private fun PlanCreateContent(
     state: PlanCreateUiState,
     onNameChange: (String) -> Unit,
+    onIconChange: (PlanIcon) -> Unit,
     onIncrementDays: () -> Unit,
     onDecrementDays: () -> Unit,
     onDayNameChange: (Int, String) -> Unit,
@@ -163,6 +169,11 @@ private fun PlanCreateContent(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 8.dp)
                     .focusRequester(focusRequester),
+            )
+
+            IconPicker(
+                selected = state.icon,
+                onIconChange = onIconChange,
             )
 
             DayCountStepper(
@@ -224,6 +235,41 @@ private fun PlanCreateContent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun IconPicker(
+    selected: PlanIcon,
+    onIconChange: (PlanIcon) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+    ) {
+        Text(
+            text = "Ikona planu",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            PlanIcon.entries.forEach { icon ->
+                FilledIconToggleButton(
+                    checked = icon == selected,
+                    onCheckedChange = { onIconChange(icon) },
+                ) {
+                    Icon(
+                        imageVector = icon.toImageVector(),
+                        contentDescription = icon.contentLabel(),
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun DayCountStepper(
     count: Int,
@@ -270,6 +316,7 @@ private fun PlanCreateDefaultPreview() {
             PlanCreateContent(
                 state = PlanCreateUiState(),
                 onNameChange = {},
+                onIconChange = {},
                 onIncrementDays = {},
                 onDecrementDays = {},
                 onDayNameChange = { _, _ -> },
@@ -291,6 +338,7 @@ private fun PlanCreateContentPreview() {
                     days = listOf("Push", "Pull", "Legs"),
                 ),
                 onNameChange = {},
+                onIconChange = {},
                 onIncrementDays = {},
                 onDecrementDays = {},
                 onDayNameChange = { _, _ -> },
@@ -313,6 +361,7 @@ private fun PlanCreateErrorPreview() {
                     nameError = "Plan o tej nazwie już istnieje",
                 ),
                 onNameChange = {},
+                onIconChange = {},
                 onIncrementDays = {},
                 onDecrementDays = {},
                 onDayNameChange = { _, _ -> },

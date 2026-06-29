@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.painzone.ui.common.TopLevelTopBar
+import com.painzone.ui.plans.toImageVector
 import com.painzone.ui.theme.PainZoneTheme
 
 @Composable
@@ -195,7 +195,7 @@ private fun ActivePlanCard(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CardHeader(
-                icon = Icons.Filled.FitnessCenter,
+                icon = plan.planIcon.toImageVector(),
                 eyebrow = "Aktywny plan",
                 title = plan.planName,
             )

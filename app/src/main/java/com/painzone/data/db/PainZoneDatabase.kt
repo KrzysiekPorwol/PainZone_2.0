@@ -29,7 +29,7 @@ import com.painzone.data.stats.StatsDao
         SessionExerciseSnapshotEntity::class,
         LoggedSetEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

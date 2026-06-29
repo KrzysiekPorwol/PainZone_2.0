@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
@@ -41,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.painzone.domain.plan.PlanIcon
 import com.painzone.domain.plan.PlanSummary
 import com.painzone.ui.common.TopLevelTopBar
 import com.painzone.ui.theme.PainZoneTheme
@@ -215,7 +215,7 @@ private fun PlanCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.FitnessCenter,
+                imageVector = plan.icon.toImageVector(),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
@@ -288,9 +288,9 @@ private fun dayCountLabel(count: Int): String {
 }
 
 private val previewPlans = listOf(
-    PlanSummary(id = 1L, name = "Push/Pull/Legs", isActive = true, dayCount = 3),
-    PlanSummary(id = 2L, name = "Full Body Beginner", isActive = false, dayCount = 2),
-    PlanSummary(id = 3L, name = "Upper/Lower", isActive = false, dayCount = 1),
+    PlanSummary(id = 1L, name = "Push/Pull/Legs", isActive = true, dayCount = 3, icon = PlanIcon.FITNESS_CENTER),
+    PlanSummary(id = 2L, name = "Bieganie 5k", isActive = false, dayCount = 2, icon = PlanIcon.DIRECTIONS_RUN),
+    PlanSummary(id = 3L, name = "Joga poranna", isActive = false, dayCount = 1, icon = PlanIcon.SELF_IMPROVEMENT),
 )
 
 @Preview(showBackground = true, name = "Loading")

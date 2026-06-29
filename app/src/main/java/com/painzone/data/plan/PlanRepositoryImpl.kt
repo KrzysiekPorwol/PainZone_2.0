@@ -8,6 +8,7 @@ import com.painzone.domain.plan.CreatePlanResult
 import com.painzone.domain.plan.DayWithExercises
 import com.painzone.domain.plan.DeletePlanResult
 import com.painzone.domain.plan.DeleteResult
+import com.painzone.domain.plan.PlanIcon
 import com.painzone.domain.plan.PlanRepository
 import com.painzone.domain.plan.PlanSummary
 import com.painzone.domain.plan.PlanWithDays
@@ -44,6 +45,7 @@ class PlanRepositoryImpl @Inject constructor(
                     name = row.plan.name,
                     isActive = row.plan.isActive,
                     dayCount = row.dayCount,
+                    icon = PlanIcon.fromName(row.plan.icon),
                 )
             }
         }
@@ -57,11 +59,11 @@ class PlanRepositoryImpl @Inject constructor(
     override suspend fun getById(id: Long): TrainingPlan? =
         planDao.getById(id)?.toDomain()
 
-    override suspend fun create(name: String): CreatePlanResult {
+    override suspend fun create(name: String, icon: PlanIcon): CreatePlanResult {
         val trimmed = name.trim()
         if (planDao.findByName(trimmed) != null) return CreatePlanResult.DuplicateName
         val id = planDao.insert(
-            TrainingPlan.create(trimmed, Instant.now()).toEntity(),
+            TrainingPlan.create(trimmed, Instant.now(), icon).toEntity(),
         )
         return CreatePlanResult.Success(id)
     }

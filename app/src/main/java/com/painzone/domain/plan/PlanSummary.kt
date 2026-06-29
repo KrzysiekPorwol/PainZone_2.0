@@ -7,4 +7,5 @@ data class PlanSummary(
     val name: String,
     val isActive: Boolean,
     val dayCount: Int,
+    val icon: PlanIcon = PlanIcon.DEFAULT,
 )

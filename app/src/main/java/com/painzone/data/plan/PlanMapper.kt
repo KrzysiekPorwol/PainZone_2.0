@@ -1,5 +1,6 @@
 package com.painzone.data.plan
 
+import com.painzone.domain.plan.PlanIcon
 import com.painzone.domain.plan.PlannedDay
 import com.painzone.domain.plan.PlannedExercise
 import com.painzone.domain.plan.TrainingPlan
@@ -9,6 +10,7 @@ fun TrainingPlanEntity.toDomain(): TrainingPlan = TrainingPlan(
     name = name,
     isActive = isActive,
     createdAt = createdAt,
+    icon = PlanIcon.fromName(icon),
 )
 
 fun TrainingPlan.toEntity(): TrainingPlanEntity = TrainingPlanEntity(
@@ -16,6 +18,7 @@ fun TrainingPlan.toEntity(): TrainingPlanEntity = TrainingPlanEntity(
     name = name,
     isActive = isActive,
     createdAt = createdAt,
+    icon = icon.name,
 )
 
 fun PlannedDayEntity.toDomain(): PlannedDay = PlannedDay(

@@ -3,6 +3,7 @@ package com.painzone.ui.plans
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.painzone.domain.plan.CreatePlanResult
+import com.painzone.domain.plan.PlanIcon
 import com.painzone.domain.plan.PlanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -29,6 +30,10 @@ class PlanCreateViewModel @Inject constructor(
 
     fun onNameChange(value: String) {
         _uiState.update { it.copy(name = value, nameError = null) }
+    }
+
+    fun onIconChange(icon: PlanIcon) {
+        _uiState.update { it.copy(icon = icon) }
     }
 
     // Session count is stepper-driven (1..7). Grow appends a blank session;
@@ -58,7 +63,7 @@ class PlanCreateViewModel @Inject constructor(
         if (!state.canSave) return
         _uiState.update { it.copy(saving = true) }
         viewModelScope.launch {
-            when (val result = repository.create(state.name)) {
+            when (val result = repository.create(state.name, state.icon)) {
                 is CreatePlanResult.Success -> {
                     // Days were validated unique locally — addDay won't hit DuplicateName/PlanNotFound.
                     state.days.forEach { dayName -> repository.addDay(result.id, dayName.trim()) }

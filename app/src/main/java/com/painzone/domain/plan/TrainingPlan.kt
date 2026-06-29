@@ -7,6 +7,7 @@ data class TrainingPlan(
     val name: String,
     val isActive: Boolean,
     val createdAt: Instant,
+    val icon: PlanIcon = PlanIcon.DEFAULT,
 ) {
     init {
         require(name == name.trim()) { "name must be trimmed" }
@@ -20,12 +21,13 @@ data class TrainingPlan(
     fun deactivate(): TrainingPlan = copy(isActive = false)
 
     companion object {
-        fun create(name: String, now: Instant): TrainingPlan =
+        fun create(name: String, now: Instant, icon: PlanIcon = PlanIcon.DEFAULT): TrainingPlan =
             TrainingPlan(
                 id = 0L,
                 name = name.trim(),
                 isActive = false,
                 createdAt = now,
+                icon = icon,
             )
     }
 }

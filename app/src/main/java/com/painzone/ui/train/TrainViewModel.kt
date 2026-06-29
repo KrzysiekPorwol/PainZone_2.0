@@ -54,6 +54,7 @@ class TrainViewModel @Inject constructor(
                             resume = resume,
                             activePlan = ActivePlanInfo(
                                 planName = active.name,
+                                planIcon = active.icon,
                                 suggestedDay = suggested?.let { StartableDay(it.id, it.name) },
                                 allDays = ordered.map { StartableDay(it.id, it.name) },
                             ),

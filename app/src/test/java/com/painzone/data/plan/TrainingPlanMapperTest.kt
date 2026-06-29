@@ -1,5 +1,6 @@
 package com.painzone.data.plan
 
+import com.painzone.domain.plan.PlanIcon
 import com.painzone.domain.plan.TrainingPlan
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -50,5 +51,34 @@ class TrainingPlanMapperTest {
         val original = TrainingPlanEntity(id = 42L, name = "Split", isActive = true, createdAt = t0)
 
         assertEquals(original, original.toDomain().toEntity())
+    }
+
+    @Test
+    fun `icon round-trips by enum name`() {
+        val entity = TrainingPlanEntity(
+            id = 7L,
+            name = "Cardio",
+            isActive = false,
+            createdAt = t0,
+            icon = "DIRECTIONS_RUN",
+        )
+
+        val domain = entity.toDomain()
+
+        assertEquals(PlanIcon.DIRECTIONS_RUN, domain.icon)
+        assertEquals("DIRECTIONS_RUN", domain.toEntity().icon)
+    }
+
+    @Test
+    fun `unknown icon name falls back to default`() {
+        val entity = TrainingPlanEntity(
+            id = 8L,
+            name = "Legacy",
+            isActive = false,
+            createdAt = t0,
+            icon = "SOMETHING_REMOVED",
+        )
+
+        assertEquals(PlanIcon.DEFAULT, entity.toDomain().icon)
     }
 }

@@ -1,5 +1,7 @@
 package com.painzone.ui.train
 
+import com.painzone.domain.plan.PlanIcon
+
 // S1 — Trenuj. M3.4 scope: resume banner (in-progress session) + SmartCard (active plan).
 // The two are independent: an in-progress session keeps its own plan/day snapshot even
 // after the active plan changes, so "Wznów" always returns to the right session.
@@ -23,6 +25,7 @@ data class ResumeInfo(
 
 data class ActivePlanInfo(
     val planName: String,
+    val planIcon: PlanIcon = PlanIcon.DEFAULT,
     // Smart suggestion: the day to train next (rotation after the last trained day). Null when
     // the plan has no days yet. Always one of [allDays].
     val suggestedDay: StartableDay?,
